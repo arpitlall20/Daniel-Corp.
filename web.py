@@ -29,7 +29,7 @@ except ImportError:
 from team import approvals, chats, usage  # noqa: E402
 from team import agent as core  # noqa: E402
 from team.config import load, set_enabled, set_model  # noqa: E402
-from team import org  # noqa: E402
+from team import org, routines  # noqa: E402
 from team.tools.memory import MEMORY, memory_text  # noqa: E402
 from team.tools.tasks import list_projects, list_tasks  # noqa: E402
 
@@ -87,19 +87,29 @@ approvals.set_handler(web_approval)
 
 
 # ---- background runs ----------------------------------------------------------
-def start_run(key: str, text: str) -> str:
+def start_run(key: str, text: str, routine: dict | None = None) -> str:
     run_id = uuid.uuid4().hex[:10]
-    ACTIVE[run_id] = {"run": run_id, "member": key, "started": time.time(), "text": text}
-    threading.Thread(target=_run, args=(run_id, key, text), daemon=True).start()
+    ACTIVE[run_id] = {"run": run_id, "member": key, "started": time.time(), "text": text,
+                      "routine": routine["name"] if routine else None}
+    threading.Thread(target=_run, args=(run_id, key, text, routine), daemon=True).start()
     return run_id
 
 
-def _run(run_id: str, key: str, text: str) -> None:
+def _run(run_id: str, key: str, text: str, routine: dict | None = None) -> None:
     core.begin_run(run_id)
     history = chats.model_history(transcript(key))
-    transcript(key).append({"role": "you", "text": text, "ts": time.time(), "run": run_id})
+    entry = {"role": "you", "text": text, "ts": time.time(), "run": run_id}
+    if routine:
+        entry["routine"] = routine["name"]
+        text = f"[Scheduled routine '{routine['name']}' ({routine.get('describe', '')}). The owner isn't watching; " \
+               f"do it fully and give a clear, skimmable result.]\n\n{text}"
+    transcript(key).append(entry)
     chats.save(key, transcript(key))
-    core.log_event("You", f"to {AGENTS[key].name}: {text[:160]}", "you", key="you", target=key, detail=text)
+    if routine:
+        core.log_event("Routine", f"⏰ {routine['name']} started ({routine.get('reason', 'on schedule')})", "routine",
+                       key="you", target=key, detail=routine["name"])
+    else:
+        core.log_event("You", f"to {AGENTS[key].name}: {text[:160]}", "you", key="you", target=key, detail=text)
     status = "done"
     try:
         reply = AGENTS[key].run(text, history) or "(no reply)"
@@ -116,6 +126,11 @@ def _run(run_id: str, key: str, text: str) -> None:
                              "secs": round(time.time() - ACTIVE[run_id]["started"], 1),
                              "cost": round(info.get("cost", 0.0), 5), "steps": info.get("steps", 0)})
     chats.save(key, transcript(key))
+    if routine:
+        routines.record(routine["id"], status, reply, run_id, round(time.time() - ACTIVE[run_id]["started"], 1),
+                        round(info.get("cost", 0.0), 5))
+        core.log_event("Routine", f"⏰ {routine['name']} {'finished' if status == 'done' else status}", "routine_done",
+                       key=key, detail=routine["name"] if routine.get("notify", True) else "")
     core.log_event(AGENTS[key].name if key in AGENTS else key, f"request {status}", "run_end", key=key)
     ACTIVE.pop(run_id, None)
     core.CANCELLED.discard(run_id)
@@ -129,6 +144,51 @@ def stop_run(run_id: str) -> None:
                 item["approved"] = False
                 item["event"].set()
     core.log_event("You", "pressed Stop", "stopped", key="you")
+
+
+# ---- routines: the scheduler ---------------------------------------------------------
+def scheduler_loop() -> None:
+    while True:
+        try:
+            busy = {r["member"] for r in ACTIVE.values()}
+            for r, reason in routines.due(busy):
+                if r["agent"] not in AGENTS or not load()["agents"].get(r["agent"], {}).get("enabled"):
+                    routines.record(r["id"], "skipped (agent off)", "", "", 0, 0)
+                    core.log_event("Routine", f"⏰ {r['name']} skipped: {r['agent']} is switched off", "error", key="you")
+                    continue
+                start_run(r["agent"], r["prompt"], {**r, "reason": reason, "describe": routines.describe(r["schedule"])})
+        except Exception:
+            traceback.print_exc()
+        time.sleep(20)
+
+
+# ---- start with Windows ----------------------------------------------------------------
+def _startup_file() -> Path | None:
+    appdata = os.getenv("APPDATA")
+    if os.name != "nt" or not appdata:
+        return None
+    return Path(appdata) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup" / "Daniel Corp AI Team.vbs"
+
+
+def autostart_state() -> dict:
+    f = _startup_file()
+    return {"supported": f is not None, "enabled": bool(f and f.exists())}
+
+
+def set_autostart(on: bool) -> dict:
+    f = _startup_file()
+    if not f:
+        raise ValueError("Start-with-Windows only works on Windows.")
+    if on:
+        here = Path(__file__).resolve().parent
+        pyw = Path(sys.executable).with_name("pythonw.exe")
+        exe = pyw if pyw.exists() else Path(sys.executable)
+        f.write_text('Set sh = CreateObject("WScript.Shell")\r\n'
+                     f'sh.CurrentDirectory = "{here}"\r\n'
+                     f'sh.Run """{exe}"" ""{here / "web.py"}"" --no-browser", 0, False\r\n', encoding="utf-8")
+    elif f.exists():
+        f.unlink()
+    return autostart_state()
 
 
 # ---- state for the page ---------------------------------------------------------
@@ -273,6 +333,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/transcript":
             key = q.get("member", "")
             return self._send(200, transcript(key) if key in AGENTS else [])
+        if path == "/api/routines":
+            return self._send(200, {"routines": routines.all_routines(), "autostart": autostart_state(),
+                                    "now": routines.now().isoformat()})
         if path == "/api/abilities":
             return self._send(200, {"abilities": org.abilities_catalog(), "models": org.MODELS})
         if path == "/api/run":
@@ -365,6 +428,38 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(400, {"error": str(e)})
             core.log_event("You", msg, "system", key="you")
             return self._send(200, {"message": msg, **team_state()})
+        if path.startswith("/api/routines/"):
+            action = path.rsplit("/", 1)[-1]
+            try:
+                if action == "add":
+                    r = routines.create(body)
+                    core.log_event("You", f"created routine '{r['name']}' ({routines.describe(r['schedule'])})", "system", key="you")
+                elif action == "update":
+                    r = routines.update(body.get("id", ""), body)
+                elif action == "toggle":
+                    r = routines.set_enabled(body.get("id", ""), bool(body.get("enabled")))
+                elif action == "delete":
+                    name = routines.delete(body.get("id", ""))
+                    core.log_event("You", f"deleted routine '{name}'", "system", key="you")
+                    return self._send(200, {"ok": True})
+                elif action == "run":
+                    r = routines.get(body.get("id", ""))
+                    if not r:
+                        raise ValueError("Routine not found.")
+                    if any(a["member"] == r["agent"] for a in ACTIVE.values()):
+                        raise ValueError(f"{AGENTS[r['agent']].name} is busy. Try again in a moment.")
+                    if not load()["agents"].get(r["agent"], {}).get("enabled"):
+                        raise ValueError(f"{AGENTS[r['agent']].name} is switched off.")
+                    routines.mark_started(r["id"])
+                    run = start_run(r["agent"], r["prompt"], {**r, "reason": "run now", "describe": routines.describe(r["schedule"])})
+                    return self._send(200, {"run": run})
+                elif action == "autostart":
+                    return self._send(200, set_autostart(bool(body.get("enabled"))))
+                else:
+                    return self._send(404, {"error": "not found"})
+            except (ValueError, KeyError) as e:
+                return self._send(400, {"error": str(e).strip("'")})
+            return self._send(200, {"routine": r})
         if path == "/api/health/test":
             return self._send(200, test_connection(body.get("id", "")))
         if path == "/api/chat":
@@ -384,7 +479,14 @@ def _safe_json(text: str) -> str:
 
 
 def main():
-    server = ThreadingHTTPServer((HOST, PORT), Handler)
+    try:
+        server = ThreadingHTTPServer((HOST, PORT), Handler)
+    except OSError:  # already running (e.g. started with Windows): just open it
+        print(f"The panel is already running at http://localhost:{PORT}")
+        if "--no-browser" not in sys.argv:
+            webbrowser.open(f"http://localhost:{PORT}")
+        return
+    threading.Thread(target=scheduler_loop, daemon=True).start()
     server.daemon_threads = True
     url = f"http://localhost:{PORT}"
     print(f"Your AI team control panel is running at {url}  (Ctrl+C to stop)")

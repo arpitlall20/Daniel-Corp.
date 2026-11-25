@@ -238,7 +238,30 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
 .abil input { margin-top: 3px; } .abil small { display: block; color: var(--muted); font-size: 12px; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .ferr { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
-.toast { bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+.rwrap { flex: 1; overflow: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.rhead { display: flex; align-items: center; gap: 12px; } .rhead .grow { flex: 1; }
+.rhead h3 { margin: 0; font-size: 18px; } .rhead p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.autostart { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 12px 14px; font-size: 13px; }
+.autostart.on { border-color: var(--ok); background: var(--ok-soft); } .autostart .grow { flex: 1; }
+.rcard { border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.rcard.off { opacity: .65; } .rcard.running { border-color: var(--accent); }
+.rtop { display: flex; gap: 12px; align-items: center; }
+.rtop .av { width: 40px; height: 40px; } .rtop .grow { flex: 1; min-width: 0; }
+.rname { font-weight: 600; font-size: 15px; } .rsub { font-size: 13px; color: var(--muted); }
+.rprompt { font-size: 13px; color: var(--muted); margin: 10px 0 0; padding: 8px 10px; background: var(--panel2); border-radius: 8px; white-space: pre-wrap; max-height: 64px; overflow: hidden; }
+.ract { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+.ract .grow { flex: 1; font-size: 12px; color: var(--muted); }
+.rhist { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.rhist details { border-bottom: 1px solid var(--line); padding: 6px 0; font-size: 13px; }
+.rhist summary { cursor: pointer; } .rhist .body { padding: 8px 4px; line-height: 1.55; }
+.rhist .body p { margin: 0 0 6px; }
+.tabdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); margin-left: 4px; vertical-align: 2px; }
+.daypick { display: flex; gap: 6px; flex-wrap: wrap; } .daypick label { border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; cursor: pointer; font-size: 13px; }
+.daypick label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); } .daypick input { display: none; }
+.checkrow { display: flex; gap: 8px; align-items: center; font-size: 14px; margin-top: 10px; }
+.msg.you.routine { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); font-size: 13px; }
+.form [hidden] { display: none; }
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
 .toast.show { opacity: 1; }
 @media (max-width: 1180px) { main { grid-template-columns: 240px 1fr; } aside.side { display: none; } .hide-s { display: none; } }
 @media (max-width: 760px) { main { grid-template-columns: 1fr; } aside.team { display: none; } .pills { display: none; } #dock { left: 12px; right: 12px; width: auto; } .brand span { display: none; } }
@@ -266,7 +289,7 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
     <div class="label" style="margin-top:22px">Shortcuts</div>
     <div class="muted" style="font-size:12px;line-height:2;padding:0 8px">
       <span class="kbd">Alt</span>+<span class="kbd">1–7</span> switch agent<br>
-      <span class="kbd">Alt</span>+<span class="kbd">M</span> live map · <span class="kbd">Alt</span>+<span class="kbd">C</span> chat<br>
+      <span class="kbd">Alt</span>+<span class="kbd">M</span> map · <span class="kbd">Alt</span>+<span class="kbd">C</span> chat · <span class="kbd">Alt</span>+<span class="kbd">R</span> routines<br>
       <span class="kbd">/</span> type · <span class="kbd">?</span> help · <span class="kbd">Esc</span> close</div>
   </aside>
 
@@ -274,6 +297,7 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
     <div class="viewtabs" role="tablist">
       <button id="vChat" class="on" onclick="setView('chat')">💬 Chat</button>
       <button id="vMap" onclick="setView('map')">🗺️ Live team map</button>
+      <button id="vRout" onclick="setView('rout')">⏰ Routines<span id="routDot"></span></button>
     </div>
     <div class="view" id="chatView">
       <div class="chat-head">
@@ -290,6 +314,14 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
         <button type="button" class="mic" id="micBtn" onclick="toggleMic()" title="Speak instead of typing" aria-label="Voice input">🎤</button>
         <button class="primary" id="sendBtn" type="submit">Send</button>
       </form>
+    </div>
+    <div class="view" id="routView" hidden>
+      <div class="rwrap">
+        <div class="rhead"><div class="grow"><h3>⏰ Routines</h3><p>Jobs your team does on a schedule. Or just tell the Team Lead, e.g. “every weekday at 7:30 give me a briefing”.</p></div>
+          <button class="primary" onclick="openRoutine()">＋ New routine</button></div>
+        <div id="autostart"></div>
+        <div id="routList"></div>
+      </div>
     </div>
     <div class="view" id="mapView" hidden>
       <div class="mapwrap">
@@ -357,9 +389,9 @@ const TOOL = {
   git_commit_and_push: ["⬆️", "Saving work to GitHub"], open_pull_request: ["🔀", "Opening a pull request"],
   get_pull_request_diff: ["🔍", "Reviewing changes"], comment_on_pull_request: ["💬", "Leaving review feedback"],
   merge_pull_request: ["🔀", "Merging code"], add_lesson: ["🎓", "Teaching the junior"],
-  read_team_activity: ["🕵️", "Checking what the team did"], read_member_chat: ["🕵️", "Reading a team chat"], delegate: ["👉", "Delegating"],
+  read_team_activity: ["🕵️", "Checking what the team did"], read_member_chat: ["🕵️", "Reading a team chat"], create_routine: ["⏰", "Setting up a routine"], list_routines: ["⏰", "Checking routines"], delegate: ["👉", "Delegating"],
 };
-const KIND_ICON = { you: "🗨️", start: "▶️", delegate: "👉", report: "📨", tool: "🛠️", search: "🔎", approval: "✋", approved: "👍",
+const KIND_ICON = { routine: "⏰", routine_done: "⏰", you: "🗨️", start: "▶️", delegate: "👉", report: "📨", tool: "🛠️", search: "🔎", approval: "✋", approved: "👍",
   declined: "👎", error: "⚠️", done: "✅", stopped: "⏹️", system: "⚙️", run_end: "🏁", info: "•" };
 
 const S = { team: [], approvals: [], active: [], usage: {}, events: [], lastId: 0, current: "team_lead", view: "chat",
@@ -450,7 +482,13 @@ function onEvent(e) {
     if (document.hidden) notify(`${e.agent} replied`, "Your answer is ready.");
     refreshTasks();
   }
-  if (S.view === "map") animateEvent(e);
+  if (e.kind === "routine_done" && !S.seenRunEnd.has("r" + e.id)) {
+    S.seenRunEnd.add("r" + e.id);
+    if (S.view === "rout") loadRoutines(); else $("routDot").innerHTML = '<span class="tabdot"></span>';
+    if (e.detail) { toast(e.text + ". See Routines."); beep(); notify(e.text, "Open the panel to read the result."); }
+  }
+  if (e.kind === "routine" && S.view === "rout") loadRoutines();
+  if (S.view === "map") { if (e.kind === "routine") travel("you", e.target, getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()); animateEvent(e); }
 }
 
 /* header + team */
@@ -513,7 +551,7 @@ function renderMessages() {
     return;
   }
   box.innerHTML = (more ? `<div style="text-align:center">${more}</div>` : "") + list.map((m, i) => m.role === "you"
-    ? `<div class="msg you">${esc(m.text)}</div>`
+    ? (m.routine ? `<div class="msg you routine">⏰ Routine: <b>${esc(m.routine)}</b></div>` : `<div class="msg you">${esc(m.text)}</div>`)
     : `<div class="msg agent ${m.status || ""}">${md(m.text)}
         ${m.run ? `<div class="meta">${m.secs != null ? `⏱ ${dur(m.secs)}` : ""}${m.steps != null ? ` · ${m.steps} step${m.steps === 1 ? "" : "s"}` : ""}${m.cost != null ? ` · ${money(m.cost)}` : ""}
           <span style="flex:1"></span><button onclick="toggleTrace('${m.run}', this)">${openTraces.has(m.run) ? "Hide steps" : "Show steps"}</button>
@@ -551,7 +589,7 @@ function renderRunCard(force) {
   const evs = S.events.filter(e => e.run === run.run);
   const box = $("messages"), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
   const stepsEl = slot.querySelector(".steps"), stepsTop = stepsEl ? stepsEl.scrollTop : 0;
-  slot.innerHTML = `<div class="runcard"><div class="runhead"><span class="sp"></span><span class="grow">${esc(nameOf(run.member))} is working on it</span>
+  slot.innerHTML = `<div class="runcard"><div class="runhead"><span class="sp"></span><span class="grow">${run.routine ? "⏰ " + esc(run.routine) + ": " : ""}${esc(nameOf(run.member))} is working on it</span>
     <span class="nums">⏱ ${dur(nowS() - run.started)} · ${run.steps} steps · ${money(run.cost)}</span>
     <button class="danger" onclick="stopRun('${run.run}')">⏹ Stop</button></div><div class="steps">${stepsHTML(evs, true)}</div></div>`;
   const ns = slot.querySelector(".steps"); ns.scrollTop = force || atBottom ? ns.scrollHeight : stepsTop;
@@ -633,8 +671,9 @@ function cycleTheme() { const order = ["auto", "light", "dark"]; const t = order
 
 /* views */
 function setView(v) {
-  S.view = v; $("chatView").hidden = v !== "chat"; $("mapView").hidden = v !== "map";
-  $("vChat").classList.toggle("on", v === "chat"); $("vMap").classList.toggle("on", v === "map");
+  S.view = v; $("chatView").hidden = v !== "chat"; $("mapView").hidden = v !== "map"; $("routView").hidden = v !== "rout";
+  $("vChat").classList.toggle("on", v === "chat"); $("vMap").classList.toggle("on", v === "map"); $("vRout").classList.toggle("on", v === "rout");
+  if (v === "rout") { $("routDot").innerHTML = ""; loadRoutines(); }
   if (v === "map") { buildMap(); updateMap(); renderNow(); renderTicker(); } else renderRunCard(true);
   renderTeam();
 }
@@ -845,6 +884,7 @@ function openHelp() {
     <h5>🧠 Does it remember me?</h5><p>Yes. Each chat is saved, and lasting facts go into Team memory (right panel) that every agent reads. You can edit or erase it anytime.</p>
     <h5>👀 Can I see what they're doing?</h5><p>Live, step by step: the team map, the progress card in chat, “Show steps” under every reply, and the Activity feed.</p>
     <h5>🔀 Can several agents work at once?</h5><p>Yes. Message different agents and they work in parallel; each one handles one request at a time.</p>
+    <h5>⏰ Can it do things on a schedule?</h5><p>Yes. Make a routine in the Routines tab (or just ask the Team Lead): daily, weekdays, chosen days, every few hours, monthly or once. Turn on “Start with Windows” so routines run even when you haven't opened the panel.</p>
     <h5>💸 What does it cost?</h5><p>Every reply shows its cost. The header shows today, this month and all time; the Usage tab breaks it down by agent and day. Switch any agent to a cheaper model in its profile.</p>
     <h5>🏠 Where does my data live?</h5><p>On your computer. Chats, memory and logs stay in the data folder and are never uploaded to GitHub.</p>
     <h5>⏰ Does it work when the panel is closed?</h5><p>Agents work while web.py (the black window) is running. Closing the browser tab is fine; closing the black window stops them.</p>
@@ -959,6 +999,114 @@ function initMapDrag() {
   svg.addEventListener("pointercancel", () => finish(false));
 }
 
+
+/* ---------- routines ---------- */
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const RTEMPLATES = [
+  { label: "☀️ Morning briefing", name: "Morning briefing", agent: "team_lead", schedule: { type: "weekdays", time: "07:30" },
+    prompt: "Give me my morning briefing: today's calendar, deadlines in the next 7 days, overdue tasks, and anything the team is waiting on me for. Keep it to a short, skimmable list." },
+  { label: "📅 Deadline check", name: "Deadline check", agent: "assistant", schedule: { type: "daily", time: "09:00" },
+    prompt: "Check my projects and tasks. List anything due in the next 3 days or overdue, and suggest a time in my calendar to work on each." },
+  { label: "📰 News digest", name: "Industry news digest", agent: "web", schedule: { type: "weekdays", time: "08:00" },
+    prompt: "Search for the most important news from the last 24 hours relevant to my business (see team memory). Give me the top 5 stories, one line each, with links." },
+  { label: "🗓️ Weekly review", name: "Weekly review", agent: "team_lead", schedule: { type: "days", days: [4], time: "16:00" },
+    prompt: "Do my weekly review: what the team got done this week (check the activity log and task board), what's still open, next week's calendar highlights, and the top 3 priorities for next week." },
+  { label: "🌐 Website check", name: "Website check", agent: "web", schedule: { type: "days", days: [0], time: "10:00" },
+    prompt: "Review my latest WordPress posts and pages. Flag outdated information, broken-looking content or missing excerpts, and suggest one new post idea. Don't change anything." },
+  { label: "✈️ Travel deals", name: "Travel deals watch", agent: "travel", schedule: { type: "days", days: [2], time: "12:00" },
+    prompt: "Look for good flight deals from my home airport for the next 3 months, based on my travel preferences. Give me the 3 best with prices and links." },
+];
+let openRoutineResult = null;
+async function loadRoutines() {
+  let d; try { d = await api("/api/routines"); } catch (e) { return toast(e.message); }
+  S.routines = d.routines; renderAutostart(d.autostart); renderRoutines();
+}
+function renderAutostart(a) {
+  if (!a.supported) { $("autostart").innerHTML = `<div class="autostart"><span style="font-size:20px">💡</span><span class="grow">Routines run while the panel is running. Leave its window open (or minimised) so they run on time.</span></div>`; return; }
+  $("autostart").innerHTML = `<div class="autostart ${a.enabled ? "on" : ""}"><span style="font-size:20px">${a.enabled ? "✅" : "💡"}</span>
+    <span class="grow"><b>Start with Windows</b><br>${a.enabled ? "On: the team starts quietly in the background when you log in, so routines run even if you never open the panel."
+      : "Routines only run while the panel is running. Turn this on so the team starts quietly in the background whenever you log in."}</span>
+    <label class="switch"><input type="checkbox" ${a.enabled ? "checked" : ""} onchange="setAutostart(this.checked)" aria-label="Start with Windows"><span></span></label></div>`;
+}
+async function setAutostart(on) { try { renderAutostart(await api("/api/routines/autostart", { enabled: on })); toast(on ? "The team will start with Windows" : "Auto-start turned off"); } catch (e) { toast(e.message); } }
+function rel(iso) {
+  if (!iso) return "—"; const s = (new Date(iso) - Date.now()) / 1000 - S.offset;
+  if (s < 60) return "any moment"; const m = Math.round(s / 60); if (m < 60) return `in ${m} min`;
+  const h = Math.floor(m / 60); if (h < 24) return `in ${h}h ${m % 60}m`;
+  return new Date(iso).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
+const when = iso => new Date(iso).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+function renderRoutines() {
+  const list = S.routines || [];
+  if (!list.length) { $("routList").innerHTML = `<div class="empty" style="margin-top:30px"><div class="emo">⏰</div><div class="big">No routines yet</div>
+      Pick one to start with, or make your own.<div class="suggest">${RTEMPLATES.map((t, i) => `<button onclick="openRoutine(null, ${i})">${t.label}</button>`).join("")}</div></div>`; return; }
+  const running = new Set(S.active.filter(a => a.routine).map(a => a.routine));
+  const openNow = new Set([...document.querySelectorAll(".rhist details[open]")].map(d => d.dataset.k));
+  $("routList").innerHTML = list.map(r => {
+    const isRun = running.has(r.name);
+    return `<div class="rcard ${r.enabled ? "" : "off"} ${isRun ? "running" : ""}">
+      <div class="rtop"><div class="av ${isRun ? "working" : ""}">${iconOf(r.agent)}</div>
+        <div class="grow"><div class="rname">${esc(r.name)}</div>
+          <div class="rsub">${esc(r.describe)} · by ${esc(nameOf(r.agent))} · ${isRun ? "<b style='color:var(--accent)'>running now</b>" : r.enabled ? "next " + esc(rel(r.next_run)) : "paused"}</div></div>
+        <label class="switch" title="${r.enabled ? "Pause" : "Turn on"}"><input type="checkbox" ${r.enabled ? "checked" : ""} onchange="toggleRoutine('${r.id}', this.checked)" aria-label="Routine on or off"><span></span></label></div>
+      <div class="rprompt">${esc(r.prompt)}</div>
+      <div class="ract"><span class="grow">${r.last_run ? `Last run ${when(r.last_run)}: ${esc(r.last_status || "")}` : "Hasn't run yet"}${r.catch_up ? " · catches up if missed" : ""}</span>
+        <button onclick="runRoutine('${r.id}')" ${isRun ? "disabled" : ""}>▶ Run now</button><button onclick="openRoutine('${r.id}')">✏️ Edit</button>
+        <button onclick="deleteRoutine('${r.id}')" aria-label="Delete">🗑</button></div>
+      ${r.history && r.history.length ? `<div class="rhist">${r.history.slice(0, 5).map((h, i) => { const k = r.id + h.ts;
+        return `<details data-k="${esc(k)}" ${openNow.has(k) || (i === 0 && openRoutineResult === r.id) ? "open" : ""}>
+        <summary>${h.status === "done" ? "✅" : h.status === "stopped" ? "⏹️" : "⚠️"} ${when(h.ts)} <span class="muted">· ${dur(h.secs || 0)} · ${money(h.cost)}</span></summary>
+        <div class="body">${md(h.reply || "(no reply)")}</div></details>`; }).join("")}</div>` : ""}
+    </div>`; }).join("");
+}
+async function toggleRoutine(id, on) { try { await api("/api/routines/toggle", { id, enabled: on }); toast(on ? "Routine on" : "Routine paused"); loadRoutines(); } catch (e) { toast(e.message); } }
+async function runRoutine(id) { try { await api("/api/routines/run", { id }); openRoutineResult = id; toast("Running now. Watch it on the map, or wait for the result here."); setTimeout(loadRoutines, 900); } catch (e) { toast(e.message); } }
+async function deleteRoutine(id) { const r = S.routines.find(x => x.id === id); if (!confirm(`Delete the routine “${r.name}”?`)) return;
+  try { await api("/api/routines/delete", { id }); toast("Routine deleted"); loadRoutines(); } catch (e) { toast(e.message); } }
+const inputStyle = "width:100%;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text)";
+function openRoutine(id, tpl) {
+  const base = { name: "", agent: "team_lead", prompt: "", schedule: { type: "weekdays", time: "07:30" }, catch_up: true, notify: true };
+  const r = id ? S.routines.find(x => x.id === id) : { ...base, ...(tpl != null ? RTEMPLATES[tpl] : {}) };
+  const sc = r.schedule;
+  modal(id ? "✏️ Edit routine" : "⏰ New routine", `<div class="form">
+    ${id ? "" : `<span class="fl" style="margin-top:0">Start from a template</span><div class="tpls">${RTEMPLATES.map((t, i) => `<button type="button" onclick="openRoutine(null, ${i})">${t.label}</button>`).join("")}</div>`}
+    <span class="fl">Name</span><input type="text" id="rName" maxlength="60" value="${esc(r.name)}" placeholder="e.g. Morning briefing">
+    <span class="fl">Who does it</span><select id="rAgent">${S.team.map(m => `<option value="${m.key}" ${m.key === r.agent ? "selected" : ""}>${iconOf(m.key)} ${esc(m.name)}${m.enabled ? "" : " (switched off)"}</option>`).join("")}</select>
+    <span class="fl">What to do each time</span><textarea id="rPrompt" placeholder="Write it like a message to them, e.g. “Check my calendar and deadlines and give me a short briefing.”">${esc(r.prompt)}</textarea>
+    <div class="two"><div><span class="fl">How often</span><select id="rType" onchange="routineFields()">
+        ${[["daily", "Every day"], ["weekdays", "Weekdays (Mon–Fri)"], ["days", "On chosen days"], ["hours", "Every few hours"], ["monthly", "Once a month"], ["once", "Just once"]]
+          .map(([v, l]) => `<option value="${v}" ${v === sc.type ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div><span class="fl" id="rTimeLbl">At</span><input type="time" id="rTime" value="${esc(sc.time || "08:00")}" style="${inputStyle}"></div></div>
+    <div id="rDaysBox"><span class="fl">Which days</span><div class="daypick">${DAYS.map((d, i) => `<label><input type="checkbox" value="${i}" ${(sc.days || []).includes(i) ? "checked" : ""}>${d}</label>`).join("")}</div></div>
+    <div id="rHoursBox"><span class="fl">Every</span><select id="rEvery">${[1, 2, 3, 4, 6, 8, 12].map(n => `<option value="${n}" ${n === (sc.every || 3) ? "selected" : ""}>${n} hour${n > 1 ? "s" : ""}</option>`).join("")}</select></div>
+    <div id="rMonthBox"><span class="fl">Day of the month</span><select id="rDay">${Array.from({ length: 28 }, (_, i) => i + 1).map(n => `<option ${n === (sc.day || 1) ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    <div id="rDateBox"><span class="fl">Date</span><input type="date" id="rDate" value="${esc(sc.date || new Date().toISOString().slice(0, 10))}" style="${inputStyle}"></div>
+    <label class="checkrow"><input type="checkbox" id="rCatch" ${r.catch_up !== false ? "checked" : ""}> If my computer was off at that time, run it as soon as the panel starts</label>
+    <label class="checkrow"><input type="checkbox" id="rNotify" ${r.notify !== false ? "checked" : ""}> Alert me when it finishes</label>
+    <div class="muted" style="font-size:12px;margin-top:10px">Anything risky still asks for your approval. If you're away, it's declined after 10 minutes and the routine carries on without it.</div>
+    <div class="ferr" id="rErr"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button type="button" onclick="closeAll()">Cancel</button>
+      <button type="button" class="primary" onclick="saveRoutine(${id ? `'${id}'` : "null"})">${id ? "Save" : "Create routine"}</button></div></div>`);
+  routineFields();
+}
+function routineFields() {
+  const t = $("rType").value;
+  $("rDaysBox").hidden = t !== "days"; $("rHoursBox").hidden = t !== "hours"; $("rMonthBox").hidden = t !== "monthly"; $("rDateBox").hidden = t !== "once";
+  $("rTimeLbl").textContent = t === "hours" ? "Starting from" : "At";
+}
+async function saveRoutine(id) {
+  const t = $("rType").value;
+  const body = { id, name: $("rName").value.trim(), agent: $("rAgent").value, prompt: $("rPrompt").value.trim(), catch_up: $("rCatch").checked, notify: $("rNotify").checked,
+    schedule: { type: t, time: $("rTime").value || "08:00", days: [...document.querySelectorAll(".daypick input:checked")].map(c => +c.value),
+      every: +$("rEvery").value, day: +$("rDay").value, date: $("rDate").value } };
+  if (!body.name) { $("rErr").textContent = "Give the routine a name."; return; }
+  if (!body.prompt) { $("rErr").textContent = "Say what they should do each time."; return; }
+  if (t === "days" && !body.schedule.days.length) { $("rErr").textContent = "Pick at least one day."; return; }
+  try { const d = await api(id ? "/api/routines/update" : "/api/routines/add", body); closeAll();
+    toast(`⏰ ${d.routine.name}: next run ${rel(d.routine.next_run)}`); setView("rout"); } catch (e) { $("rErr").textContent = e.message; }
+}
+setInterval(() => { if (S.view === "rout" && !$("modal").classList.contains("show")) loadRoutines(); }, 15000);
+
 /* input + keyboard */
 function autosize() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
 $("input").addEventListener("input", autosize);
@@ -969,6 +1117,7 @@ document.addEventListener("keydown", e => {
   if (e.altKey && /^[1-9]$/.test(e.key)) { const m = S.team[+e.key - 1]; if (m) { e.preventDefault(); pick(m.key); } }
   if (e.altKey && e.key.toLowerCase() === "m") { e.preventDefault(); setView("map"); }
   if (e.altKey && e.key.toLowerCase() === "c") { e.preventDefault(); setView("chat"); }
+  if (e.altKey && e.key.toLowerCase() === "r") { e.preventDefault(); setView("rout"); }
   if (!typing && e.key === "/") { e.preventDefault(); setView("chat"); $("input").focus(); }
   if (!typing && e.key === "?") { e.preventDefault(); openHelp(); }
 });

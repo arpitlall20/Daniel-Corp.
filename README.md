@@ -99,6 +99,19 @@ The header shows estimated spend **today / this month / all time**; click it (or
 breakdown by agent and by day. It's saved in `data/usage.json`, so it keeps counting across restarts.
 Set `MONTHLY_BUDGET_USD` in `.env` to get a warning. Exact balance: console.anthropic.com > Billing.
 
+## Routines (scheduled jobs)
+
+Open the **⏰ Routines** tab, or just tell the Team Lead ("every weekday at 7:30, give me a briefing").
+- Schedules: every day, weekdays, chosen days, every few hours, monthly, or once; in your timezone (`TIMEZONE` in `.env`).
+- Templates: morning briefing, deadline check, news digest, weekly review, website check, travel deals.
+- Each routine has an on/off switch, **Run now**, edit, delete, and a history of its last results.
+- Missed runs (computer off) can catch up when the panel starts, or be skipped: your choice per routine.
+- You get a sound and desktop alert when one finishes (turn alerts on with 🔔).
+- **Start with Windows** (in the Routines tab) launches the team quietly in the background when you log in,
+  so routines run even if you never open the panel. Opening `start.bat` then just opens the browser.
+
+Routines run only while the panel is running. They're saved in `data/routines.json`.
+
 ## Your org chart
 
 Agents you add and any changes to who reports to whom are saved in `data/org.json` on your computer.

@@ -13,6 +13,7 @@ from .tools.memory import LESSONS, LESSON_TOOLS, MEMORY_TOOLS, TRAVEL_MEMORY_TOO
 from .tools.oversight import OVERSIGHT_TOOLS
 from .tools.tasks import PROJECT_TOOLS, TASK_TOOLS
 from .tools.wordpress import WORDPRESS_TOOLS
+from .routines import ROUTINE_TOOLS
 
 OWNER = os.getenv("OWNER_NAME", "the owner")
 TZ = os.getenv("TIMEZONE", "Australia/Brisbane")
@@ -122,13 +123,16 @@ How you work:
   team handle their own people. Coordinate across them (e.g. after a trip is approved, ask whoever
   manages the calendar to block the time).
 - Track multi-step work on the task board; skip it for quick one-off questions.
+- When {OWNER} wants something done regularly ("every morning...", "each Friday..."), set it up with
+  create_routine. Assign it to the best-fit member, or to yourself (team_lead) if it needs several
+  people. Write the instructions as a complete request, then confirm the schedule in one line.
 
 How you talk to {OWNER}:
 - Short. Lead with the answer or outcome in one or two sentences. Use a few bullets only if needed.
   No preamble, no restating the question, no lists of options unless asked.
 - At most ONE question per reply, and only if you truly cannot proceed without it.
 - When something failed: what happened, the cause, what you did or what {OWNER} needs to do. That's it.""",
-        tools=TASK_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS + OVERSIGHT_TOOLS,
+        tools=TASK_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS + OVERSIGHT_TOOLS + ROUTINE_TOOLS,
         extra_context=now_context, max_turns=30, role="plans, delegates, checks and reports", icon="🧭",
     )
     return {a.key: a for a in (lead, assistant, travel, web, senior, junior)}
