@@ -1,7 +1,14 @@
-"""The core agent loop: think -> call tools -> read results -> repeat. Also tracks cost."""
+"""The core agent loop: think -> call tools -> read results -> repeat.
+
+Also tracks cost, a live status for every agent, and a step-by-step trace of every request ("run"),
+which the web panel uses to show your team working in real time.
+"""
 from __future__ import annotations
 
+import json
 import os
+import threading
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,25 +25,76 @@ PRICES = {
 }
 WEB_SEARCH_PRICE = 0.01  # $10 per 1,000 searches
 COST_LOG: dict[str, float] = defaultdict(float)
-EVENTS: list[dict] = []  # live activity feed (shown in the web panel)
+
+# ---- live state shared with the web panel --------------------------------------------------
+EVENTS: list[dict] = []                    # recent activity (also appended to data/activity.log)
+STATUS: dict[str, dict] = {}               # agent key -> {state, doing, task, run, since}
+RUNS: dict[str, dict] = {}                 # run id -> {cost, steps, started}
+CANCELLED: set[str] = set()                # run ids you pressed Stop on
+ACTIVITY_LOG = Path(__file__).resolve().parents[1] / "data" / "activity.log"
+_lock = threading.Lock()
+_ctx = threading.local()                   # which run / agent this thread is working for
 
 
-ACTIVITY_LOG = Path(__file__).resolve().parents[1] / "data" / "activity.log"   # survives restarts
+class StopRequested(BaseException):
+    """Raised inside a run when you press Stop. A BaseException so tool error handling can't swallow it."""
 
 
-def log_event(agent: str, text: str) -> None:
-    import json
-    import time
-    ev = {"id": max(int(time.time() * 1000), (EVENTS[-1]["id"] + 1) if EVENTS else 0), "time": time.strftime("%H:%M:%S"),
-          "date": time.strftime("%Y-%m-%d"), "agent": agent, "text": text}
-    EVENTS.append(ev)
-    del EVENTS[:-500]
+def begin_run(run_id: str | None) -> None:
+    _ctx.run_id = run_id
+    _ctx.stack = []
+    if run_id:
+        RUNS[run_id] = {"cost": 0.0, "steps": 0, "started": time.time()}
+
+
+def current_run() -> str | None:
+    return getattr(_ctx, "run_id", None)
+
+
+def current_agent() -> str | None:
+    stack = getattr(_ctx, "stack", [])
+    return stack[-1] if stack else None
+
+
+def set_status(key: str, state: str, doing: str = "", task: str | None = None) -> None:
+    with _lock:
+        prev = STATUS.get(key, {})
+        STATUS[key] = {"state": state, "doing": doing, "since": time.time(), "run": current_run(),
+                       "task": prev.get("task", "") if task is None else task}
+
+
+def log_event(agent: str, text: str, kind: str = "info", key: str | None = None,
+              target: str | None = None, detail: str = "") -> None:
+    run = current_run()
+    with _lock:
+        ev = {"id": max(int(time.time() * 1000), (EVENTS[-1]["id"] + 1) if EVENTS else 0),
+              "time": time.strftime("%H:%M:%S"), "date": time.strftime("%Y-%m-%d"), "ts": time.time(),
+              "agent": agent, "text": text, "kind": kind, "key": key or current_agent(), "target": target,
+              "detail": detail[:300], "run": run}
+        EVENTS.append(ev)
+        del EVENTS[:-1000]
+        if run in RUNS and kind in ("tool", "search", "delegate"):
+            RUNS[run]["steps"] += 1
     try:
         ACTIVITY_LOG.parent.mkdir(exist_ok=True)
         with ACTIVITY_LOG.open("a", encoding="utf-8") as f:
             f.write(json.dumps(ev, ensure_ascii=False) + "\n")
     except OSError:
         pass
+
+
+def _check_stop() -> None:
+    run = current_run()
+    if run and run in CANCELLED:
+        raise StopRequested()
+
+
+def _summary(args: dict) -> str:
+    for k in ("query", "title", "member", "path", "command", "start", "day", "name", "fact", "search", "status"):
+        if args.get(k):
+            return f"{args[k]}"[:90]
+    return ""
+
 
 _client = None
 
@@ -50,13 +108,13 @@ def client():
     return _client
 
 
-def _cost(model: str, usage) -> float:
+def _cost(model: str, usage_obj) -> float:
     p_in, p_out, p_cache = PRICES.get(model, PRICES["claude-sonnet-5-5"])
-    cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
-    cache_write = getattr(usage, "cache_creation_input_tokens", 0) or 0
-    cost = (usage.input_tokens * p_in + cache_write * p_in * 1.25 + cache_read * p_cache
-            + usage.output_tokens * p_out) / 1_000_000
-    stu = getattr(usage, "server_tool_use", None)
+    cache_read = getattr(usage_obj, "cache_read_input_tokens", 0) or 0
+    cache_write = getattr(usage_obj, "cache_creation_input_tokens", 0) or 0
+    cost = (usage_obj.input_tokens * p_in + cache_write * p_in * 1.25 + cache_read * p_cache
+            + usage_obj.output_tokens * p_out) / 1_000_000
+    stu = getattr(usage_obj, "server_tool_use", None)
     if stu and getattr(stu, "web_search_requests", 0):
         cost += stu.web_search_requests * WEB_SEARCH_PRICE
     return cost
@@ -85,17 +143,50 @@ class Agent:
             ))
 
     def _delegate(self, member: str, task: str) -> str:
+        if member not in self.team:
+            return f"Unknown team member {member}."
         if not is_enabled(member):
+            log_event(self.name, f"couldn't delegate: {self.team[member].name} is switched off", "error",
+                      key=self.key, target=member)
             return f"{member} is switched OFF by the owner. Tell the owner, or handle it another way."
-        print(f"  -> {self.name} delegates to {self.team[member].name}: {task[:90]}")
-        log_event(self.name, f"delegated to {self.team[member].name}: {task[:140]}")
-        result = self.team[member].run(task)
-        log_event(self.team[member].name, f"reported back to {self.name}: {result[:400]}")
+        sub = self.team[member]
+        print(f"  -> {self.name} delegates to {sub.name}: {task[:90]}")
+        log_event(self.name, f"delegated to {sub.name}: {task[:200]}", "delegate", key=self.key, target=member,
+                  detail=task)
+        set_status(self.key, "delegating", f"Waiting on {sub.name}")
+        try:
+            result = sub.run(task)
+        finally:
+            set_status(self.key, "working", "Reviewing the report")
+        log_event(sub.name, f"reported back to {self.name}: {result[:400]}", "report", key=member, target=self.key,
+                  detail=result)
         return result
 
     def run(self, task: str, history: list | None = None) -> str:
         if not is_enabled(self.key):
             return f"{self.name} is switched off."
+        if not hasattr(_ctx, "stack"):
+            begin_run(None)
+        _ctx.stack.append(self.key)
+        set_status(self.key, "working", "Reading the request", task=task[:200])
+        log_event(self.name, f"started: {task[:200]}", "start", key=self.key, detail=task)
+        try:
+            reply = self._loop(task, history)
+            log_event(self.name, "finished", "done", key=self.key, detail=reply)
+            set_status(self.key, "idle", "", task="")
+            return reply
+        except StopRequested:
+            set_status(self.key, "idle", "", task="")
+            log_event(self.name, "stopped by you", "stopped", key=self.key)
+            raise
+        except Exception as e:
+            set_status(self.key, "error", f"{type(e).__name__}: {str(e)[:160]}")
+            log_event(self.name, f"crashed: {type(e).__name__}: {e}", "error", key=self.key)
+            raise
+        finally:
+            _ctx.stack.pop()
+
+    def _loop(self, task: str, history: list | None) -> str:
         system = self.instructions + (("\n\n" + self.extra_context()) if self.extra_context else "")
         system_blocks = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
         tool_specs = [t.spec() for t in self.tools] + self.server_tools
@@ -103,30 +194,41 @@ class Agent:
         messages = (history or []) + [{"role": "user", "content": task}]
 
         for _ in range(self.max_turns):
+            _check_stop()
+            set_status(self.key, "working", "Thinking…")
             kwargs = {"tools": tool_specs} if tool_specs else {}
             resp = client().messages.create(model=self.model, max_tokens=8000, system=system_blocks,
                                             messages=messages, **kwargs)
             call_cost = _cost(self.model, resp.usage)
             COST_LOG[self.name] += call_cost
             usage.record(self.name, call_cost)
+            if current_run() in RUNS:
+                RUNS[current_run()]["cost"] += call_cost
             messages.append({"role": "assistant", "content": resp.content})
             for block in resp.content:
                 if block.type == "server_tool_use":
-                    log_event(self.name, f"web search: {block.input.get('query', '')}")
+                    q = (block.input or {}).get("query", "")
+                    log_event(self.name, f"web search: {q}", "search", key=self.key, detail=q)
 
             if resp.stop_reason == "tool_use":
                 results = []
                 for block in resp.content:
-                    if block.type == "tool_use":
-                        if os.getenv("VERBOSE") == "1":
-                            print(f"    [{self.name}] {block.name}({str(block.input)[:120]})")
-                        if block.name != "delegate":
-                            log_event(self.name, f"using {block.name}")
-                        tool = tools_by_name.get(block.name)
-                        out = tool.run(**block.input) if tool else f"Unknown tool {block.name}"
-                        if out.startswith("ERROR"):
-                            log_event(self.name, f"{block.name} FAILED: {out[:400]}")
-                        results.append({"type": "tool_result", "tool_use_id": block.id, "content": out})
+                    if block.type != "tool_use":
+                        continue
+                    _check_stop()
+                    if os.getenv("VERBOSE") == "1":
+                        print(f"    [{self.name}] {block.name}({str(block.input)[:120]})")
+                    if block.name != "delegate":
+                        set_status(self.key, "working", f"tool:{block.name}")
+                        log_event(self.name, f"using {block.name}", "tool", key=self.key,
+                                  detail=f"{block.name}|{_summary(block.input or {})}")
+                    tool = tools_by_name.get(block.name)
+                    out = tool.run(**block.input) if tool else f"Unknown tool {block.name}"
+                    if out.startswith("ERROR"):
+                        log_event(self.name, f"{block.name} FAILED: {out[:400]}", "error", key=self.key)
+                    elif out.startswith("Owner declined"):
+                        log_event(self.name, f"{block.name}: you declined", "declined", key=self.key)
+                    results.append({"type": "tool_result", "tool_use_id": block.id, "content": out})
                 messages.append({"role": "user", "content": results})
             elif resp.stop_reason == "pause_turn":   # long server-side search; just continue
                 continue

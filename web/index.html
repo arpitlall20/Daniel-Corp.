@@ -6,401 +6,841 @@
 <title>Daniel Corp · AI Team</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%234f46c8%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-size=%2216%22 font-family=%22sans-serif%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22%3EDC%3C/text%3E%3C/svg%3E">
 <style>
-  :root {
-    --bg: #f6f5f1; --panel: #ffffff; --line: #e4e2da; --text: #1f1e1b; --muted: #75736b;
-    --accent: #4f46c8; --accent-soft: #eceafd; --ok: #1d9e75; --ok-soft: #e1f5ee;
-    --warn: #b45f06; --warn-soft: #fdf1de; --danger: #c2392f; --you: #1f1e1b; --you-text: #fff;
-    --radius: 12px; --font: "Segoe UI", system-ui, -apple-system, sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #161614; --panel: #1f1f1c; --line: #34332e; --text: #ecebe5; --muted: #9c9a92;
-      --accent: #9d97f0; --accent-soft: #2b2850; --ok: #5dcaa5; --ok-soft: #0f2e25;
-      --warn: #f0a94b; --warn-soft: #3a2a10; --you: #ecebe5; --you-text: #161614; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px;
-    border-bottom: 1px solid var(--line); background: var(--panel); }
-  header h1 { font-size: 18px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
-  header h1 span { color: var(--muted); font-weight: 400; }
-  .cost { font-size: 13px; color: var(--muted); }
-  .cost b { color: var(--text); font-weight: 600; }
-  main { display: grid; grid-template-columns: 290px 1fr 320px; height: calc(100vh - 57px); }
-  aside, section { overflow-y: auto; }
-  aside.team { border-right: 1px solid var(--line); padding: 18px 14px; background: var(--panel); }
-  aside.side { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
-  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 4px 8px 10px; }
-  .member { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; cursor: pointer;
-    border: 1px solid transparent; margin-bottom: 4px; transition: background .15s; }
-  .member:hover { background: var(--bg); }
-  .member.active { background: var(--accent-soft); border-color: var(--accent); }
-  .member.off { opacity: .55; }
-  .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none;
-    font-size: 13px; font-weight: 600; background: var(--accent-soft); color: var(--accent); position: relative; }
-  .avatar .dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%;
-    border: 2px solid var(--panel); background: var(--muted); }
-  .avatar .dot.on { background: var(--ok); }
-  .avatar .dot.busy { background: var(--warn); animation: pulse 1s infinite; }
-  @keyframes pulse { 50% { opacity: .35; } }
-  .who { flex: 1; min-width: 0; }
-  .who .n { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .who .m { font-size: 12px; color: var(--muted); }
-  .indent-1 { margin-left: 18px; } .indent-2 { margin-left: 36px; }
-  .switch { position: relative; width: 36px; height: 20px; flex: none; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .switch span { position: absolute; inset: 0; background: var(--line); border-radius: 20px; transition: .2s; cursor: pointer; }
-  .switch span::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px;
-    background: #fff; border-radius: 50%; transition: .2s; }
-  .switch input:checked + span { background: var(--ok); }
-  .switch input:checked + span::before { transform: translateX(16px); }
-  .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .bulk { display: flex; gap: 8px; margin: 14px 8px 0; }
-  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
-    color: var(--text); padding: 7px 12px; font-size: 13px; }
-  button:hover { border-color: var(--muted); }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.primary:disabled { opacity: .5; cursor: default; }
-  .chat { display: flex; flex-direction: column; min-width: 0; }
-  .chat-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-bottom: 1px solid var(--line); }
-  .chat-head .t { font-weight: 600; } .chat-head .s { font-size: 13px; color: var(--muted); }
-  .messages { flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
-  .msg { max-width: 78%; padding: 11px 15px; border-radius: 14px; line-height: 1.55; overflow-wrap: anywhere; }
-  .msg.you { align-self: flex-end; background: var(--you); color: var(--you-text); border-bottom-right-radius: 4px; white-space: pre-wrap; }
-  .msg.agent { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
-  .msg.agent p { margin: 0 0 8px; } .msg.agent p:last-child { margin-bottom: 0; }
-  .msg.agent ul { margin: 4px 0 8px; padding-left: 20px; }
-  .msg.agent h3, .msg.agent h4 { margin: 10px 0 6px; font-size: 15px; }
-  .msg.agent code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-  .msg.agent pre { background: var(--bg); padding: 10px; border-radius: 8px; overflow-x: auto; }
-  .msg.agent pre code { padding: 0; }
-  .msg.agent a { color: var(--accent); }
-  .msg.agent table { border-collapse: collapse; margin: 6px 0; font-size: 14px; }
-  .msg.agent td, .msg.agent th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
-  .thinking { align-self: flex-start; font-size: 13px; color: var(--muted); padding: 4px 2px; }
-  .thinking .live { display: block; margin-top: 3px; }
-  .empty { margin: auto; text-align: center; color: var(--muted); max-width: 380px; line-height: 1.6; }
-  .empty .big { font-size: 17px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
-  .suggest { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
-  .suggest button { border-radius: 20px; }
-  .composer { display: flex; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--panel); }
-  textarea { flex: 1; resize: none; font: inherit; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line);
-    background: var(--bg); color: var(--text); min-height: 44px; max-height: 160px; }
-  textarea:focus { outline: none; border-color: var(--accent); }
-  .approvals { padding: 0 22px; }
-  .approval { margin-top: 14px; border: 1px solid var(--warn); background: var(--warn-soft); border-radius: var(--radius);
-    padding: 14px 16px; display: flex; gap: 14px; align-items: center; }
-  .approval .a { flex: 1; } .approval .h { font-weight: 600; color: var(--warn); font-size: 13px; margin-bottom: 3px; }
-  .approval button.yes { background: var(--ok); border-color: var(--ok); color: #fff; }
-  .tabs { display: flex; border-bottom: 1px solid var(--line); }
-  .tabs button { flex: 1; border: 0; border-radius: 0; padding: 13px; background: none; color: var(--muted); border-bottom: 2px solid transparent; }
-  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
-  .pane { flex: 1; overflow-y: auto; padding: 14px 16px; }
-  .ev { font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
-  .ev .tm { color: var(--muted); font-size: 11px; } .ev b { font-weight: 600; }
-  .task { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
-  .task .tt { font-weight: 600; margin-bottom: 4px; }
-  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--bg); color: var(--muted); margin-right: 4px; }
-  .pill.done { background: var(--ok-soft); color: var(--ok); } .pill.doing, .pill.review { background: var(--accent-soft); color: var(--accent); }
-  .pill.blocked { background: var(--warn-soft); color: var(--warn); }
-  button.earlier { border: 0; background: none; color: var(--accent); font-size: 13px; padding: 4px 8px; }
-  button.earlier:hover { text-decoration: underline; }
-  .remembers { font-size: 12px; margin-top: 6px; color: var(--ok); }
-  .cost.over #cMonth { color: var(--danger); }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-  .stat.warn { border-color: var(--warn); background: var(--warn-soft); }
-  .stat .sl { font-size: 12px; color: var(--muted); } .stat .sv { font-size: 20px; font-weight: 600; margin-top: 2px; }
-  .bar { display: grid; grid-template-columns: 110px 1fr 64px; gap: 8px; align-items: center; font-size: 12px; margin-bottom: 6px; }
-  .bar .bl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
-  .bar .bt { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
-  .bar .bt span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
-  .bar .bv { text-align: right; font-variant-numeric: tabular-nums; }
-  .tabs button { padding: 13px 4px; font-size: 13px; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg);
-    padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
-  .toast.show { opacity: 1; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  @media (max-width: 1100px) { main { grid-template-columns: 250px 1fr; } aside.side { display: none; } }
-  @media (max-width: 720px) { main { grid-template-columns: 1fr; height: auto; } aside.team { border-right: 0; border-bottom: 1px solid var(--line); }
-    .chat { height: 80vh; } }
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --panel2: #fbfaf7; --line: #e6e4dc; --text: #1f1e1b; --muted: #77756d;
+  --accent: #4f46c8; --accent-soft: #ecebfd; --ok: #16916b; --ok-soft: #e1f5ee; --warn: #c27006; --warn-soft: #fdf1de;
+  --danger: #c2392f; --danger-soft: #fcebea; --you: #1f1e1b; --you-text: #fff; --shadow: 0 8px 30px rgba(20,20,40,.12);
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif; --mono: "Cascadia Code", Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  --bg: #141413; --panel: #1d1d1b; --panel2: #232320; --line: #33322d; --text: #ecebe5; --muted: #9c9a92;
+  --accent: #a29cf4; --accent-soft: #2a2750; --ok: #4fc79d; --ok-soft: #10302a; --warn: #f0a94b; --warn-soft: #3a2a10;
+  --danger: #f08a80; --danger-soft: #3d1a17; --you: #ecebe5; --you-text: #141413; --shadow: 0 8px 30px rgba(0,0,0,.5);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; overflow: hidden; }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); padding: 7px 12px; font-size: 13px; }
+button:hover { border-color: var(--muted); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.ghost { border-color: transparent; background: none; }
+button.ghost:hover { background: var(--panel2); border-color: var(--line); }
+button.danger { color: var(--danger); border-color: var(--danger); background: var(--panel); }
+button.yes { background: var(--ok); border-color: var(--ok); color: #fff; }
+button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.muted { color: var(--muted); }
+header { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--panel); height: 58px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; white-space: nowrap; }
+.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.brand span { color: var(--muted); font-weight: 400; }
+.pills { display: flex; gap: 8px; flex: 1; justify-content: center; min-width: 0; }
+.pill-live { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 11px; border-radius: 20px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 460px; }
+.pill-live.work { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.pill-live.need { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); animation: glow 1.6s infinite; }
+.pill-live .d { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.pill-live.work .d { animation: pulse 1s infinite; }
+.cost { font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.cost b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.cost.over #cMonth { color: var(--danger); }
+.hbtn { font-size: 16px; padding: 6px 9px; line-height: 1; }
+@keyframes pulse { 50% { opacity: .35; } }
+@keyframes glow { 50% { box-shadow: 0 0 0 4px var(--warn-soft); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } }
+main { display: grid; grid-template-columns: 270px 1fr 330px; height: calc(100vh - 58px); }
+aside.team { border-right: 1px solid var(--line); padding: 14px 12px; background: var(--panel); overflow-y: auto; }
+aside.side { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 8px 10px; }
+.member { display: flex; align-items: center; gap: 10px; padding: 9px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; margin-bottom: 3px; position: relative; }
+.member:hover { background: var(--panel2); }
+.member.active { background: var(--accent-soft); border-color: var(--accent); }
+.member.off { opacity: .5; }
+.ind1 { margin-left: 14px; } .ind2 { margin-left: 28px; }
+.av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 18px; background: var(--panel2); border: 2px solid var(--line); position: relative; }
+.av.working, .av.delegating { border-color: var(--accent); }
+.av.working::after, .av.delegating::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); animation: spin 1s linear infinite; }
+.av.waiting { border-color: var(--warn); animation: glow 1.6s infinite; }
+.av.error { border-color: var(--danger); }
+.who { flex: 1; min-width: 0; }
+.who .n { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who .m { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who .m.live { color: var(--accent); } .who .m.wait { color: var(--warn); } .who .m.err { color: var(--danger); }
+.badge { position: absolute; top: 4px; left: 34px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--danger); color: #fff; font-size: 10px; display: grid; place-items: center; padding: 0 4px; }
+.switch { position: relative; width: 34px; height: 20px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.switch span { position: absolute; inset: 0; background: var(--line); border-radius: 20px; transition: .2s; cursor: pointer; }
+.switch span::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .2s; }
+.switch input:checked + span { background: var(--ok); }
+.switch input:checked + span::before { transform: translateX(14px); }
+.switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bulk { display: flex; gap: 8px; margin: 12px 8px 0; }
+.kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+.center { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.viewtabs { display: flex; gap: 4px; padding: 8px 14px 0; border-bottom: 1px solid var(--line); background: var(--panel); }
+.viewtabs button { border: 0; border-radius: 8px 8px 0 0; background: none; padding: 9px 14px; color: var(--muted); border-bottom: 2px solid transparent; }
+.viewtabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.view[hidden] { display: none; }
+.chat-head { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+.chat-head .t { font-weight: 600; } .chat-head .s { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-head .grow { flex: 1; min-width: 0; }
+.state-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--panel2); color: var(--muted); margin-left: 8px; font-weight: 500; }
+.state-tag.working, .state-tag.delegating { background: var(--accent-soft); color: var(--accent); }
+.state-tag.waiting { background: var(--warn-soft); color: var(--warn); } .state-tag.error { background: var(--danger-soft); color: var(--danger); }
+.messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.msg { max-width: 80%; padding: 11px 15px; border-radius: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.msg.you { align-self: flex-end; background: var(--you); color: var(--you-text); border-bottom-right-radius: 4px; white-space: pre-wrap; }
+.msg.agent { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.agent.error { border-color: var(--danger); } .msg.agent.stopped { border-style: dashed; }
+.msg.agent p { margin: 0 0 8px; }
+.msg.agent ul, .msg.agent ol { margin: 4px 0 8px; padding-left: 20px; }
+.msg.agent h4 { margin: 10px 0 6px; font-size: 15px; }
+.msg.agent code { background: var(--panel2); padding: 1px 5px; border-radius: 4px; font-size: 13px; font-family: var(--mono); }
+.msg.agent pre { background: var(--panel2); padding: 10px; border-radius: 8px; overflow-x: auto; }
+.msg.agent pre code { padding: 0; }
+.msg.agent a { color: var(--accent); }
+.msg.agent table { border-collapse: collapse; margin: 6px 0; font-size: 14px; }
+.msg.agent td { border: 1px solid var(--line); padding: 4px 8px; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.meta button { font-size: 12px; padding: 2px 8px; }
+.trace { margin-top: 10px; border-left: 2px solid var(--line); padding-left: 10px; }
+.empty { margin: auto; text-align: center; color: var(--muted); max-width: 460px; line-height: 1.6; }
+.empty .big { font-size: 18px; color: var(--text); font-weight: 600; margin: 10px 0 4px; }
+.empty .emo { font-size: 40px; }
+.remembers { font-size: 12px; margin-top: 6px; color: var(--ok); }
+.suggest { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+.suggest button { border-radius: 20px; }
+button.link { border: 0; background: none; color: var(--accent); font-size: 13px; padding: 4px 8px; }
+button.link:hover { text-decoration: underline; }
+.runcard { border: 1px solid var(--accent); background: var(--panel); border-radius: 14px; overflow: hidden; }
+.runhead { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--accent-soft); color: var(--accent); font-size: 13px; }
+.runhead .sp { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+.runhead .grow { flex: 1; font-weight: 600; }
+.runhead .nums { font-variant-numeric: tabular-nums; }
+.steps { padding: 8px 14px 12px; max-height: 320px; overflow-y: auto; }
+.step { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; padding: 5px 0; line-height: 1.4; animation: fadein .3s; }
+.step .ic { width: 22px; text-align: center; flex: none; }
+.step .tx { flex: 1; min-width: 0; } .step .tx b { font-weight: 600; }
+.dt { color: var(--muted); display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.step .tm { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.step.err .tx { color: var(--danger); } .step.need .tx { color: var(--warn); }
+.step.d1 { padding-left: 18px; } .step.d2 { padding-left: 36px; }
+.composer { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--line); background: var(--panel); align-items: flex-end; }
+textarea { flex: 1; resize: none; font: inherit; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); min-height: 44px; max-height: 160px; }
+textarea:focus { outline: none; border-color: var(--accent); }
+.mic { font-size: 17px; padding: 9px 12px; }
+.mic.on { background: var(--danger); border-color: var(--danger); color: #fff; animation: pulse 1s infinite; }
+.mapwrap { flex: 1; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.mapbox { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px; }
+.mapbox svg { display: block; width: 100%; height: auto; }
+.chips { position: absolute; left: 8px; right: 8px; top: 38px; bottom: 8px; pointer-events: none; }
+.chip { position: absolute; transform: translate(-50%, 0); background: var(--panel); border: 1px solid var(--accent); color: var(--text); box-shadow: var(--shadow); border-radius: 14px; padding: 3px 10px; font-size: 12px; white-space: nowrap; animation: floatup 2.6s ease-out forwards; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+@keyframes floatup { 0% { opacity: 0; translate: 0 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; translate: 0 -46px; } }
+.node { cursor: pointer; }
+.node .ring { fill: var(--panel2); stroke: var(--line); stroke-width: 3; transition: stroke .3s; }
+.node.working .ring, .node.delegating .ring { stroke: var(--accent); }
+.node.waiting .ring { stroke: var(--warn); } .node.error .ring { stroke: var(--danger); } .node.off { opacity: .45; }
+.node .spinner { fill: none; stroke: var(--accent); stroke-width: 3; stroke-dasharray: 40 200; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.node.working .spinner, .node.delegating .spinner { opacity: 1; animation: spin 1.1s linear infinite; }
+.node .halo { fill: var(--warn-soft); opacity: 0; }
+.node.waiting .halo { opacity: 1; animation: pulse 1.2s infinite; }
+.node:hover .ring { stroke-width: 4; }
+.node text { fill: var(--text); font-family: var(--font); }
+.node .nm { font-size: 15px; font-weight: 600; } .node .dg { font-size: 13px; fill: var(--muted); }
+.node.working .dg, .node.delegating .dg { fill: var(--accent); } .node.waiting .dg { fill: var(--warn); } .node.error .dg { fill: var(--danger); }
+.edge { fill: none; stroke: var(--line); stroke-width: 2; }
+.edge.hot { stroke: var(--accent); stroke-dasharray: 6 6; animation: dash 1s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -24; } }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); padding: 4px 8px 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px solid; margin-right: 5px; vertical-align: -1px; }
+.nowcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.nowcard { border: 1px solid var(--accent); background: var(--panel); border-radius: 12px; padding: 12px 14px; font-size: 13px; }
+.nowcard .h { display: flex; gap: 8px; align-items: center; font-weight: 600; margin-bottom: 4px; }
+.nowcard .q { color: var(--muted); margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nowcard .r { display: flex; gap: 8px; align-items: center; }
+.nowcard .r .grow { flex: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ticker .ev { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; border: 0; border-radius: 0; padding: 12px 4px; background: none; color: var(--muted); border-bottom: 2px solid transparent; font-size: 13px; }
+.tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.pane { flex: 1; overflow-y: auto; padding: 12px 14px; }
+.ev { display: flex; gap: 8px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); line-height: 1.45; animation: fadein .3s; }
+.ev .ic { width: 20px; text-align: center; flex: none; }
+.ev .tx { flex: 1; min-width: 0; overflow-wrap: anywhere; } .ev .tm { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.ev b { font-weight: 600; } .ev.err .tx { color: var(--danger); } .ev.need .tx { color: var(--warn); }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.filters button { font-size: 12px; padding: 3px 9px; border-radius: 14px; }
+.filters button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.task { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+.task .tt { font-weight: 600; margin-bottom: 4px; }
+.tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--panel2); color: var(--muted); margin: 0 4px 2px 0; }
+.tag.done { background: var(--ok-soft); color: var(--ok); } .tag.doing, .tag.review { background: var(--accent-soft); color: var(--accent); }
+.tag.blocked { background: var(--warn-soft); color: var(--warn); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.stat.warn { border-color: var(--warn); background: var(--warn-soft); }
+.stat .sl { font-size: 12px; color: var(--muted); } .stat .sv { font-size: 20px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.bar { display: grid; grid-template-columns: 110px 1fr 64px; gap: 8px; align-items: center; font-size: 12px; margin-bottom: 6px; }
+.bar .bl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.bar .bt { height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; }
+.bar .bt span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.bar .bv { text-align: right; font-variant-numeric: tabular-nums; }
+#dock { position: fixed; right: 20px; bottom: 20px; width: 380px; display: flex; flex-direction: column; gap: 10px; z-index: 30; }
+.appr { background: var(--panel); border: 2px solid var(--warn); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px; animation: fadein .3s; }
+.appr .h { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--warn); font-size: 13px; margin-bottom: 6px; }
+.appr .cd { flex: 1; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; align-self: center; }
+.appr .a { font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 12px; }
+.appr .b { display: flex; gap: 8px; justify-content: flex-end; }
+.scrim { position: fixed; inset: 0; background: rgba(10,10,20,.35); z-index: 40; display: none; }
+.scrim.show { display: block; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 430px; max-width: 100%; background: var(--panel); z-index: 41; box-shadow: var(--shadow); transform: translateX(105%); transition: transform .25s; display: flex; flex-direction: column; }
+.drawer.show { transform: none; }
+.dhead { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.dhead .av { width: 48px; height: 48px; font-size: 24px; }
+.dbody { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.dsec { margin-bottom: 20px; } .dsec h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.cap { display: flex; gap: 8px; font-size: 14px; padding: 5px 0; } .cap .ic { width: 22px; flex: none; text-align: center; }
+.cap.no { color: var(--muted); }
+select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); width: 100%; }
+.row { display: flex; align-items: center; gap: 10px; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.modal { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 640px; max-width: calc(100% - 32px); max-height: calc(100% - 60px); background: var(--panel); border-radius: 16px; box-shadow: var(--shadow); z-index: 41; display: none; flex-direction: column; }
+.modal.show { display: flex; }
+.mhead { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 16px; }
+.mhead .grow { flex: 1; }
+.mbody { overflow-y: auto; padding: 16px 20px; line-height: 1.55; }
+.conn { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.conn .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex: none; background: var(--muted); }
+.conn .dot.ok { background: var(--ok); } .conn .dot.bad { background: var(--danger); } .conn .dot.cfg { background: var(--warn); }
+.conn .grow { flex: 1; } .conn .res { font-size: 13px; margin-top: 4px; }
+.faq h5 { margin: 14px 0 4px; font-size: 14px; } .faq p { margin: 0; color: var(--muted); font-size: 14px; }
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+.toast.show { opacity: 1; }
+@media (max-width: 1180px) { main { grid-template-columns: 240px 1fr; } aside.side { display: none; } .hide-s { display: none; } }
+@media (max-width: 760px) { main { grid-template-columns: 1fr; } aside.team { display: none; } .pills { display: none; } #dock { left: 12px; right: 12px; width: auto; } .brand span { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>Daniel Corp <span>· AI team</span></h1>
-  <div class="cost" id="costBar" onclick="tab('usage')" title="Click for the full breakdown" style="cursor:pointer">
-    Today <b id="cToday">$0.00</b> · This month <b id="cMonth">$0.00</b> · All time <b id="cAll">$0.00</b> USD</div>
+  <div class="brand"><div class="logo">DC</div>Daniel Corp <span>· AI team</span></div>
+  <div class="pills" id="pills" aria-live="polite"></div>
+  <div class="cost" id="costBar" onclick="sideTab('usage')" title="Spending: click for details">
+    <span class="hide-s">Today <b id="cToday">$0</b> · </span>Month <b id="cMonth">$0</b><span class="hide-s"> · All time <b id="cAll">$0</b></span></div>
+  <button class="ghost hbtn" onclick="openConnections()" title="Connections" aria-label="Connections">🔌</button>
+  <button class="ghost hbtn" id="notifBtn" onclick="toggleNotify()" title="Sound and desktop alerts" aria-label="Notifications">🔕</button>
+  <button class="ghost hbtn" onclick="cycleTheme()" aria-label="Switch theme" id="themeBtn">🌓</button>
+  <button class="ghost hbtn" onclick="openHelp()" title="What can my team do? (?)" aria-label="Help">❔</button>
 </header>
 <main>
-  <aside class="team">
+  <aside class="team" aria-label="Your team">
     <div class="label">Your team</div>
     <div id="members"></div>
-    <div class="bulk">
-      <button onclick="bulk(true)">All on</button>
-      <button onclick="bulk(false)">All off</button>
-    </div>
+    <div class="bulk"><button onclick="bulk(true)">All on</button><button onclick="bulk(false)">All off</button></div>
+    <div class="label" style="margin-top:22px">Shortcuts</div>
+    <div class="muted" style="font-size:12px;line-height:2;padding:0 8px">
+      <span class="kbd">Alt</span>+<span class="kbd">1–7</span> switch agent<br>
+      <span class="kbd">Alt</span>+<span class="kbd">M</span> live map · <span class="kbd">Alt</span>+<span class="kbd">C</span> chat<br>
+      <span class="kbd">/</span> type · <span class="kbd">?</span> help · <span class="kbd">Esc</span> close</div>
   </aside>
 
-  <section class="chat">
-    <div class="chat-head">
-      <div><div class="t" id="chatName">Team Lead</div><div class="s" id="chatSub"></div></div>
-      <button onclick="resetChat()" title="Erase this conversation so the agent starts fresh. Team memory is kept.">Forget chat</button>
+  <section class="center">
+    <div class="viewtabs" role="tablist">
+      <button id="vChat" class="on" onclick="setView('chat')">💬 Chat</button>
+      <button id="vMap" onclick="setView('map')">🗺️ Live team map</button>
     </div>
-    <div class="approvals" id="approvals" aria-live="assertive"></div>
-    <div class="messages" id="messages" aria-live="polite"></div>
-    <form class="composer" onsubmit="send(event)">
-      <label class="sr" for="input">Message</label>
-      <textarea id="input" rows="1" placeholder="Message the team lead…"></textarea>
-      <button class="primary" id="sendBtn" type="submit">Send</button>
-    </form>
+    <div class="view" id="chatView">
+      <div class="chat-head">
+        <div class="av" id="chatAv">🧭</div>
+        <div class="grow"><div class="t"><span id="chatName">Team Lead</span><span class="state-tag" id="chatState">Idle</span></div>
+          <div class="s" id="chatSub"></div></div>
+        <button onclick="openProfile(S.current)">ⓘ Profile</button>
+        <button onclick="resetChat()" title="Erase this conversation so the agent starts fresh. Team memory is kept.">Forget chat</button>
+      </div>
+      <div class="messages" id="messages" aria-live="polite"></div>
+      <form class="composer" onsubmit="send(event)">
+        <label class="sr" for="input">Message</label>
+        <textarea id="input" rows="1" placeholder="Message the team lead…"></textarea>
+        <button type="button" class="mic" id="micBtn" onclick="toggleMic()" title="Speak instead of typing" aria-label="Voice input">🎤</button>
+        <button class="primary" id="sendBtn" type="submit">Send</button>
+      </form>
+    </div>
+    <div class="view" id="mapView" hidden>
+      <div class="mapwrap">
+        <div class="mapbox">
+          <div class="legend"><span><i style="border-color:var(--line)"></i>Idle</span><span><i style="border-color:var(--accent)"></i>Working</span>
+            <span><i style="border-color:var(--warn)"></i>Needs you</span><span><i style="border-color:var(--danger)"></i>Problem</span>
+            <span style="opacity:.5"><i style="border-color:var(--line)"></i>Switched off</span><span style="margin-left:auto">Click anyone to see their profile</span></div>
+          <svg id="map" role="img" aria-label="Live map of your team"></svg>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div><div class="label">Working right now</div><div class="nowcards" id="nowcards"></div></div>
+        <div class="ticker"><div class="label">Latest</div><div id="ticker"></div></div>
+      </div>
+    </div>
   </section>
 
   <aside class="side">
-    <div class="tabs">
-      <button class="on" id="tabAct" onclick="tab('act')">Activity</button>
-      <button id="tabTasks" onclick="tab('tasks')">Task board</button>
-      <button id="tabMem" onclick="tab('mem')">Memory</button>
-      <button id="tabUsage" onclick="tab('usage')">Usage</button>
+    <div class="tabs" role="tablist">
+      <button class="on" id="tAct" onclick="sideTab('act')">Activity</button>
+      <button id="tTasks" onclick="sideTab('tasks')">Tasks</button>
+      <button id="tMem" onclick="sideTab('mem')">Memory</button>
+      <button id="tUsage" onclick="sideTab('usage')">Usage</button>
     </div>
-    <div class="pane" id="usage" hidden></div>
-    <div class="pane" id="activity"></div>
-    <div class="pane" id="tasks" hidden></div>
-    <div class="pane" id="mem" hidden>
-      <div class="ev" style="color:var(--muted);border:0">What your whole team knows about you. Agents add to this when you
-        tell them something worth keeping. You can edit it too: one fact per line.</div>
+    <div class="pane" id="pAct"><div class="filters" id="filters"></div><div id="activity"></div></div>
+    <div class="pane" id="pTasks" hidden></div>
+    <div class="pane" id="pMem" hidden>
+      <div class="muted" style="font-size:13px;margin-bottom:10px">What your whole team knows about you. Agents add to this when you tell them something worth keeping. Edit freely: one fact per line.</div>
       <label class="sr" for="memText">Team memory</label>
-      <textarea id="memText" style="width:100%;min-height:340px;font-size:14px;line-height:1.5"
-        placeholder="- I prefer morning meetings&#10;- Home airport is BNE&#10;- My partner's name is ..."></textarea>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="primary" onclick="saveMemory()">Save</button>
-        <button onclick="loadMemory()">Undo changes</button>
-      </div>
+      <textarea id="memText" style="width:100%;min-height:340px;font-size:14px;line-height:1.5" placeholder="- I prefer morning meetings&#10;- Home airport is BNE"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="primary" onclick="saveMemory()">Save</button><button onclick="loadMemory()">Undo changes</button></div>
     </div>
+    <div class="pane" id="pUsage" hidden></div>
   </aside>
 </main>
+<div id="dock" aria-live="assertive"></div>
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Agent profile"></div>
+<div class="modal" id="modal" role="dialog"></div>
 <div class="toast" id="toast"></div>
 
 <script>
 const $ = id => document.getElementById(id);
-const ROLE = { team_lead: "Plans, delegates, reports", assistant: "Calendar & projects",
-  travel: "Flights, hotels, itineraries", web: "WordPress posts & pages", senior_dev: "Designs, codes, reviews", junior_dev: "Small tasks, learning" };
+const ICON = { you: "👤", team_lead: "🧭", assistant: "📅", travel: "✈️", web: "🌐", senior_dev: "🧑‍💻", junior_dev: "🌱" };
+const ROLE = { team_lead: "Plans, delegates, reports", assistant: "Calendar & projects", travel: "Flights, hotels, itineraries",
+  web: "WordPress posts & pages", senior_dev: "Designs, codes, reviews", junior_dev: "Small tasks, learning" };
 const SUGGEST = {
-  team_lead: ["What's on my plate this week?", "Plan a Sydney trip next month and block the time"],
-  assistant: ["What's on my calendar this week?", "Add a project called Daniel Corp, due 31 December"],
+  team_lead: ["Give me a morning briefing", "Plan a Sydney trip next month and block the time", "What did the team do today?"],
+  assistant: ["What's on my calendar this week?", "Find me a free hour tomorrow for the gym", "Add a project called Daniel Corp, due 31 December"],
   travel: ["Plan a weekend on the Gold Coast, budget $800", "Cheapest flights BNE to Melbourne next Friday"],
-  web: ["Draft a blog post introducing Daniel Corp", "List my latest posts and suggest improvements"],
+  web: ["List my latest posts and suggest improvements", "Draft a blog post introducing Daniel Corp"],
   senior_dev: ["Review the open pull requests", "Plan the structure for a new feature"],
   junior_dev: ["Add tests for the login function", "Fix typos in the README"],
 };
-let team = [], current = "team_lead", lastEvent = 0, sending = false, liveLines = [];
-const openedAt = Date.now() / 1000 - 1;   // only show messages from this visit; agents still remember the rest
-const showEarlier = new Set();
+const TOOL = {
+  list_events: ["📅", "Checking the calendar"], find_free_slots: ["🕒", "Finding free time"], create_event: ["➕", "Adding a calendar event"],
+  delete_event: ["🗑️", "Removing an event"], add_task: ["📝", "Adding a task"], update_task: ["✅", "Updating a task"],
+  list_tasks: ["📋", "Reading the task board"], add_project: ["📁", "Saving a project"], list_projects: ["📁", "Reading projects"],
+  remember: ["🧠", "Saving to team memory"], read_travel_preferences: ["🧳", "Reading your travel preferences"],
+  update_travel_preferences: ["🧳", "Saving a travel preference"], web_search: ["🔎", "Searching the web"],
+  wp_site_info: ["🌐", "Checking the website"], wp_list: ["🌐", "Looking through posts"], wp_get: ["📖", "Reading a page"],
+  wp_create_draft: ["✍️", "Writing a draft"], wp_update: ["✏️", "Editing content"], wp_publish: ["🚀", "Publishing"],
+  wp_list_categories: ["🏷️", "Reading categories"], list_files: ["📂", "Browsing the code"], read_file: ["📄", "Reading code"],
+  write_file: ["⌨️", "Writing code"], run_command: ["▶️", "Running a command"], git_new_branch: ["🌿", "Creating a branch"],
+  git_commit_and_push: ["⬆️", "Saving work to GitHub"], open_pull_request: ["🔀", "Opening a pull request"],
+  get_pull_request_diff: ["🔍", "Reviewing changes"], comment_on_pull_request: ["💬", "Leaving review feedback"],
+  merge_pull_request: ["🔀", "Merging code"], add_lesson: ["🎓", "Teaching the junior"],
+  read_team_activity: ["🕵️", "Checking what the team did"], read_member_chat: ["🕵️", "Reading a team chat"], delegate: ["👉", "Delegating"],
+};
+const KIND_ICON = { you: "🗨️", start: "▶️", delegate: "👉", report: "📨", tool: "🛠️", search: "🔎", approval: "✋", approved: "👍",
+  declined: "👎", error: "⚠️", done: "✅", stopped: "⏹️", system: "⚙️", run_end: "🏁", info: "•" };
 
-const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-function md(src) {
-  const blocks = [];
-  let s = esc(src).replace(/```[\w-]*\n?([\s\S]*?)```/g, (_, c) => { blocks.push(c); return `\u0000${blocks.length - 1}\u0000`; });
-  s = s.replace(/`([^`]+)`/g, "<code>$1</code>")
-       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-       .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-  const out = []; let list = null, table = null;
-  const flush = () => { if (list) { out.push("<ul>" + list.join("") + "</ul>"); list = null; }
-                        if (table) { out.push("<table>" + table.join("") + "</table>"); table = null; } };
-  for (const line of s.split("\n")) {
-    const t = line.trim();
-    if (/^[-*] /.test(t)) { if (table) flush(); (list ||= []).push("<li>" + t.slice(2) + "</li>"); continue; }
-    if (/^\|.*\|$/.test(t)) { if (list) flush(); if (/^\|[\s:|-]+\|$/.test(t)) continue;
-      (table ||= []).push("<tr>" + t.slice(1, -1).split("|").map(c => `<td>${c.trim()}</td>`).join("") + "</tr>"); continue; }
-    flush();
-    if (/^#{1,6} /.test(t)) out.push("<h4>" + t.replace(/^#+ /, "") + "</h4>");
-    else if (t) out.push("<p>" + t + "</p>");
-  }
-  flush();
-  return out.join("").replace(/\u0000(\d+)\u0000/g, (_, i) => `<pre><code>${blocks[i]}</code></pre>`);
-}
+const S = { team: [], approvals: [], active: [], usage: {}, events: [], lastId: 0, current: "team_lead", view: "chat",
+  offset: 0, unread: {}, filter: "all", notify: false, seenAppr: new Set(), seenRunEnd: new Set(), transcript: [] };
+const openedAt = Date.now() / 1000 - 1;
+const showEarlier = new Set(), openTraces = new Set();
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = v => { v = v || 0; return "$" + (v < 1 ? v.toFixed(4) : v.toFixed(2)); };
+const nowS = () => Date.now() / 1000 + S.offset;
+const dur = s => { s = Math.max(0, Math.round(s)); return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`; };
+const member = k => S.team.find(m => m.key === k);
+const nameOf = k => k === "you" ? "You" : (member(k) || {}).name || k || "";
+const iconOf = k => ICON[k] || nameOf(k).split(/\s+/).map(w => w[0]).join("").slice(0, 2);
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2400); }
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
 }
-function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
-
-function depth(m) { let d = 0, k = m.reports_to; while (k && k !== "you") { d++; k = (team.find(x => x.key === k) || {}).reports_to; } return d; }
-const initials = n => n.split(/[\s&]+/).filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase();
-
-function renderTeam() {
-  $("members").innerHTML = team.map(m => `
-    <div class="member indent-${Math.min(depth(m), 2)} ${m.key === current ? "active" : ""} ${m.enabled ? "" : "off"}"
-         onclick="pick('${m.key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')pick('${m.key}')">
-      <div class="avatar">${initials(m.name)}<span class="dot ${m.busy ? "busy" : m.enabled ? "on" : ""}"></span></div>
-      <div class="who"><div class="n">${esc(m.name)}</div><div class="m">${m.busy ? "Working…" : (ROLE[m.key] || m.model)}</div></div>
-      <label class="switch" onclick="event.stopPropagation()" title="${m.enabled ? "Switch off" : "Switch on"}">
-        <input type="checkbox" ${m.enabled ? "checked" : ""} aria-label="${esc(m.name)} on/off" onchange="toggle('${m.key}', this.checked)">
-        <span></span></label>
-    </div>`).join("");
-  const m = team.find(x => x.key === current);
-  if (m) {
-    $("chatName").textContent = m.name;
-    $("chatSub").textContent = `${m.enabled ? "On" : "Off — switch on to chat"} · ${m.model} · $${m.cost.toFixed(4)} this session`;
-    $("input").placeholder = `Message ${m.name}…`;
+function md(src) {
+  const blocks = [];
+  let s = esc(src).replace(/```[\w-]*\n?([\s\S]*?)```/g, (_, c) => { blocks.push(c); return `\u0000${blocks.length - 1}\u0000`; });
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+       .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  const out = []; let list = null, ol = null, table = null;
+  const flush = () => { if (list) out.push("<ul>" + list.join("") + "</ul>"); if (ol) out.push("<ol>" + ol.join("") + "</ol>");
+    if (table) out.push("<table>" + table.join("") + "</table>"); list = ol = table = null; };
+  for (const line of s.split("\n")) {
+    const t = line.trim();
+    if (/^[-*•] /.test(t)) { if (ol || table) flush(); (list ||= []).push("<li>" + t.slice(2) + "</li>"); continue; }
+    if (/^\d+[.)] /.test(t)) { if (list || table) flush(); (ol ||= []).push("<li>" + t.replace(/^\d+[.)] /, "") + "</li>"); continue; }
+    if (/^\|.*\|$/.test(t)) { if (list || ol) flush(); if (/^\|[\s:|-]+\|$/.test(t)) continue;
+      (table ||= []).push("<tr>" + t.slice(1, -1).split("|").map(c => `<td>${c.trim()}</td>`).join("") + "</tr>"); continue; }
+    flush();
+    if (/^#{1,6} /.test(t)) out.push("<h4>" + t.replace(/^#+ /, "") + "</h4>"); else if (t) out.push("<p>" + t + "</p>");
   }
+  flush();
+  return out.join("").replace(/\u0000(\d+)\u0000/g, (_, i) => `<pre><code>${blocks[i]}</code></pre>`);
+}
+const plain = s => s.replace(/[*_`#|>]/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/https?:\/\/\S+/g, "link");
+function doingLabel(d) { if (!d) return ""; if (d.startsWith("tool:")) { const t = TOOL[d.slice(5)]; return t ? `${t[0]} ${t[1]}…` : `Using ${d.slice(5)}…`; } return d; }
+function depth(k) { let d = 0, cur = member(k); while (cur && cur.reports_to !== "you" && d < 5) { d++; cur = member(cur.reports_to); } return d; }
+function stateText(m) {
+  if (!m) return "";
+  return { working: doingLabel(m.doing) || "Working…", delegating: m.doing || "Delegating…", waiting: "✋ Needs your approval",
+    error: "⚠️ " + (m.doing || "Problem"), idle: ROLE[m.key] || m.model, off: "Switched off" }[m.state] || "";
+}
+function eventView(e) {
+  const who = `<b>${esc(e.agent)}</b>`;
+  let ic = KIND_ICON[e.kind] || "•", text = esc(e.text), cls = "";
+  if (e.kind === "tool") { const [name, arg] = (e.detail || "").split("|"); const t = TOOL[name] || ["🛠️", name];
+    ic = t[0]; text = `${esc(t[1])}${arg ? `<span class="dt">${esc(arg)}</span>` : ""}`; }
+  else if (e.kind === "search") text = `Searching the web<span class="dt">“${esc(e.detail)}”</span>`;
+  else if (e.kind === "delegate") text = `Asked <b>${esc(nameOf(e.target))}</b><span class="dt">${esc(e.detail)}</span>`;
+  else if (e.kind === "report") text = `Reported back to <b>${esc(nameOf(e.target))}</b><span class="dt">${esc((e.detail || "").slice(0, 160))}</span>`;
+  else if (e.kind === "start") text = `Started<span class="dt">${esc((e.detail || "").slice(0, 160))}</span>`;
+  else if (e.kind === "done") text = "Finished";
+  else if (e.kind === "approval") { cls = "need"; text = `Needs your approval<span class="dt">${esc((e.detail || "").split("\n")[0])}</span>`; }
+  else if (e.kind === "error") cls = "err";
+  else if (e.kind === "you") text = `To <b>${esc(nameOf(e.target))}</b><span class="dt">${esc(e.detail)}</span>`;
+  return { ic, who, text, cls };
 }
 
-async function refreshTeam() {
+/* polling */
+async function poll() {
   try {
-    const d = await api("/api/team"); team = d.members; const u = d.usage;
-    $("cToday").textContent = money(u.today); $("cMonth").textContent = money(u.month); $("cAll").textContent = money(u.all_time);
-    $("costBar").classList.toggle("over", u.over_budget);
-    renderTeam(); if (!$("usage").hidden) refreshUsage();
-  } catch {}
+    const d = await api("/api/poll?since=" + S.lastId);
+    S.offset = d.now - Date.now() / 1000;
+    const changed = d.members.map(m => m.key + m.reports_to).join() !== S.team.map(m => m.key + m.reports_to).join();
+    S.team = d.members; S.approvals = d.approvals; S.active = d.active; S.usage = d.usage;
+    if (d.events.length) { S.lastId = d.events[d.events.length - 1].id; S.events.push(...d.events); S.events = S.events.slice(-600); }
+    for (const e of d.events) onEvent(e);
+    if (d.events.length) renderActivity();
+    renderTeam(); renderPills(); renderCost(); renderDock(); renderChatHead(); renderRunCard();
+    if (S.view === "map") { if (changed || !$("map").childElementCount) buildMap(); updateMap(); renderNow(); }
+  } catch (e) { $("pills").innerHTML = `<span class="pill-live" style="color:var(--danger)">⚠️ Can't reach the panel. Is web.py still running?</span>`; }
 }
-async function toggle(key, on) {
-  try { const d = await api("/api/toggle", { key, enabled: on }); team = d.members; renderTeam(); toast(d.message); } catch (e) { toast(e.message); }
+function onEvent(e) {
+  if (e.kind === "run_end" && !S.seenRunEnd.has(e.id)) {
+    S.seenRunEnd.add(e.id);
+    if (e.key === S.current) loadTranscript(); else S.unread[e.key] = (S.unread[e.key] || 0) + 1;
+    if (document.hidden) notify(`${e.agent} replied`, "Your answer is ready.");
+    refreshTasks();
+  }
+  if (S.view === "map") animateEvent(e);
 }
-async function bulk(on) { await toggle("all", on); }
 
-async function pick(key) { current = key; renderTeam(); await loadTranscript(); $("input").focus(); }
-async function loadTranscript() { renderMessages(await api("/api/transcript?member=" + current)); }
-function renderMessages(all) {
-  const box = $("messages");
-  const earlier = all.filter(m => !(m.ts >= openedAt));
-  const list = showEarlier.has(current) ? all : all.filter(m => m.ts >= openedAt);
-  const more = !showEarlier.has(current) && earlier.length
-    ? `<button class="earlier" onclick="showEarlier.add(current); loadTranscript()">Show earlier messages (${earlier.length})</button>` : "";
-  if (!list.length && !sending) {
-    const name = (team.find(m => m.key === current) || {}).name || "";
-    box.innerHTML = `<div class="empty"><div class="big">Chat with your ${esc(name)}</div>
-      ${esc(ROLE[current] || "")}${earlier.length ? `<div class="remembers">Remembers your earlier conversation</div>` : ""}
-      <div class="suggest">${(SUGGEST[current] || []).map(s =>
-      `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div>${more ? `<div style="margin-top:18px">${more}</div>` : ""}</div>`;
+/* header + team */
+function renderPills() {
+  const working = S.team.filter(m => ["working", "delegating"].includes(m.state));
+  let h = "";
+  if (S.approvals.length) h += `<span class="pill-live need" onclick="document.querySelector('.appr button.yes')?.focus()"><span class="d"></span>${S.approvals.length} waiting for you</span>`;
+  if (working.length) h += `<span class="pill-live work" onclick="setView('map')"><span class="d"></span>${working.length} working: ${working.map(m => esc(m.name)).join(", ")}</span>`;
+  if (!h) h = `<span class="pill-live" onclick="setView('map')"><span class="d" style="color:var(--ok)"></span>All quiet · ${S.team.filter(m => m.enabled).length} of ${S.team.length} switched on</span>`;
+  if (h !== renderPills.last) { $("pills").innerHTML = h; renderPills.last = h; }
+}
+function renderCost() {
+  const u = S.usage || {};
+  $("cToday").textContent = money(u.today); $("cMonth").textContent = money(u.month); $("cAll").textContent = money(u.all_time);
+  $("costBar").classList.toggle("over", !!u.over_budget);
+  if (!$("pUsage").hidden) refreshUsage(true);
+}
+function renderTeam() {
+  const h = S.team.map((m, i) => {
+    const st = m.state, cls = st === "waiting" ? "wait" : st === "error" ? "err" : ["working", "delegating"].includes(st) ? "live" : "";
+    return `<div class="member ind${Math.min(depth(m.key), 2)} ${m.key === S.current && S.view === "chat" ? "active" : ""} ${m.enabled ? "" : "off"}"
+      onclick="pick('${m.key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')pick('${m.key}')" title="Alt+${i + 1}">
+      <div class="av ${st}">${iconOf(m.key)}</div>${S.unread[m.key] ? `<span class="badge">${S.unread[m.key]}</span>` : ""}
+      <div class="who"><div class="n">${esc(m.name)}</div><div class="m ${cls}">${esc(stateText(m))}</div></div>
+      <label class="switch" onclick="event.stopPropagation()" title="${m.enabled ? "Switch off" : "Switch on"}">
+        <input type="checkbox" ${m.enabled ? "checked" : ""} aria-label="${esc(m.name)} on or off" onchange="toggle('${m.key}', this.checked)"><span></span></label></div>`;
+  }).join("");
+  const busyInput = $("members").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
+  if (h !== renderTeam.last && !busyInput) { $("members").innerHTML = h; renderTeam.last = h; }
+}
+async function toggle(key, on) { try { const d = await api("/api/toggle", { key, enabled: on }); S.team = d.members; renderTeam(); renderPills(); toast(d.message); } catch (e) { toast(e.message); } }
+const bulk = on => toggle("all", on);
+function renderChatHead() {
+  const m = member(S.current); if (!m) return;
+  $("chatAv").textContent = iconOf(m.key); $("chatAv").className = "av " + m.state;
+  $("chatName").textContent = m.name;
+  const tag = $("chatState"); tag.className = "state-tag " + m.state;
+  tag.textContent = { working: "Working", delegating: "Delegating", waiting: "Needs you", error: "Problem", idle: "Idle", off: "Off" }[m.state] || m.state;
+  $("chatSub").textContent = `${m.state === "idle" ? (ROLE[m.key] || "") : stateText(m)} · ${m.model} · ${money(m.cost)} this session`;
+  $("input").placeholder = m.enabled ? `Message ${m.name}…` : `${m.name} is switched off. Turn it on to chat.`;
+}
+
+/* chat */
+async function pick(key) { S.current = key; S.unread[key] = 0; setView("chat"); renderTeam(); renderChatHead(); await loadTranscript(); $("input").focus(); }
+async function loadTranscript() { try { S.transcript = await api("/api/transcript?member=" + S.current); } catch { S.transcript = []; } renderMessages(); }
+const visible = () => showEarlier.has(S.current) ? S.transcript : S.transcript.filter(m => m.ts >= openedAt);
+function renderMessages() {
+  const all = S.transcript || [], box = $("messages");
+  const earlier = all.filter(m => !(m.ts >= openedAt)), list = visible();
+  const more = !showEarlier.has(S.current) && earlier.length ? `<button class="link" onclick="showEarlier.add(S.current); renderMessages()">Show earlier messages (${earlier.length})</button>` : "";
+  const run = S.active.find(r => r.member === S.current);
+  if (!list.length && !run) {
+    const m = member(S.current) || {};
+    box.innerHTML = `<div class="empty"><div class="emo">${iconOf(S.current)}</div><div class="big">Chat with your ${esc(m.name || "")}</div>
+      ${esc(ROLE[S.current] || "")}${earlier.length ? `<div class="remembers">✓ Remembers your earlier conversation</div>` : ""}
+      <div class="suggest">${(SUGGEST[S.current] || []).map(s => `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div>
+      ${more ? `<div style="margin-top:16px">${more}</div>` : ""}</div><div id="runSlot"></div>`;
     return;
   }
-  box.innerHTML = (more ? `<div style="text-align:center">${more}</div>` : "")
-    + list.map(m => `<div class="msg ${m.role}">${m.role === "you" ? esc(m.text) : md(m.text)}</div>`).join("")
-    + (sending ? `<div class="thinking" id="thinking">Working on it…${liveLines.map(l => `<span class="live">· ${esc(l)}</span>`).join("")}</div>` : "");
+  box.innerHTML = (more ? `<div style="text-align:center">${more}</div>` : "") + list.map((m, i) => m.role === "you"
+    ? `<div class="msg you">${esc(m.text)}</div>`
+    : `<div class="msg agent ${m.status || ""}">${md(m.text)}
+        ${m.run ? `<div class="meta">${m.secs != null ? `⏱ ${dur(m.secs)}` : ""}${m.steps != null ? ` · ${m.steps} step${m.steps === 1 ? "" : "s"}` : ""}${m.cost != null ? ` · ${money(m.cost)}` : ""}
+          <span style="flex:1"></span><button onclick="toggleTrace('${m.run}', this)">${openTraces.has(m.run) ? "Hide steps" : "Show steps"}</button>
+          <button onclick="copyMsg(${i})">Copy</button><button onclick="speak(${i})" title="Read aloud" aria-label="Read aloud">🔊</button></div>
+          <div class="trace" id="tr-${m.run}" ${openTraces.has(m.run) ? "" : "hidden"}></div>` : ""}</div>`).join("") + `<div id="runSlot"></div>`;
+  for (const r of openTraces) fillTrace(r);
+  renderRunCard(true);
   box.scrollTop = box.scrollHeight;
 }
 function quick(t) { $("input").value = t; send(); }
-
 async function send(e) {
   e && e.preventDefault();
-  const text = $("input").value.trim();
-  if (!text || sending) return;
-  const m = team.find(x => x.key === current);
+  const text = $("input").value.trim(); if (!text) return;
+  const m = member(S.current);
   if (m && !m.enabled) { toast(`${m.name} is switched off`); return; }
-  const member = current;
-  sending = true; liveLines = []; $("sendBtn").disabled = true; $("input").value = ""; autosize();
-  const list = await api("/api/transcript?member=" + member);
-  renderMessages([...list, { role: "you", text, ts: Date.now() / 1000 }]);
-  try { await api("/api/chat", { member, message: text }); }
-  catch (err) { toast(err.message); }
-  sending = false; $("sendBtn").disabled = false;
-  if (member === current) await loadTranscript();
-  refreshTeam(); refreshTasks(); if (!$("mem").hidden) loadMemory();
+  $("input").value = ""; autosize();
+  try {
+    const { run } = await api("/api/chat", { member: S.current, message: text });
+    S.active.push({ run, member: S.current, started: nowS(), text, cost: 0, steps: 0 });
+    S.transcript.push({ role: "you", text, ts: nowS(), run }); renderMessages();
+  } catch (err) { toast(err.message); $("input").value = text; }
+}
+function stepsHTML(evs, live) {
+  const shown = evs.filter(e => !["you", "run_end", "system"].includes(e.kind));
+  if (!shown.length) return `<div class="step"><span class="ic">💭</span><span class="tx muted">Reading your message…</span></div>`;
+  const t0 = shown[0].ts;
+  return shown.map((e, i) => { const v = eventView(e); const d = e.key && e.key !== "you" ? Math.min(depth(e.key), 2) : 0;
+    const last = live && i === shown.length - 1 && !["done", "error", "stopped"].includes(e.kind);
+    return `<div class="step d${d} ${v.cls}"><span class="ic">${last ? "⏳" : v.ic}</span><span class="tx">${v.who} ${v.text}</span><span class="tm">+${dur(e.ts - t0)}</span></div>`; }).join("");
+}
+function renderRunCard(force) {
+  const slot = $("runSlot"); if (!slot || S.view !== "chat") return;
+  const run = S.active.find(r => r.member === S.current);
+  if (!run) { if (slot.innerHTML) slot.innerHTML = ""; return; }
+  const evs = S.events.filter(e => e.run === run.run);
+  const box = $("messages"), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+  const stepsEl = slot.querySelector(".steps"), stepsTop = stepsEl ? stepsEl.scrollTop : 0;
+  slot.innerHTML = `<div class="runcard"><div class="runhead"><span class="sp"></span><span class="grow">${esc(nameOf(run.member))} is working on it</span>
+    <span class="nums">⏱ ${dur(nowS() - run.started)} · ${run.steps} steps · ${money(run.cost)}</span>
+    <button class="danger" onclick="stopRun('${run.run}')">⏹ Stop</button></div><div class="steps">${stepsHTML(evs, true)}</div></div>`;
+  const ns = slot.querySelector(".steps"); ns.scrollTop = force || atBottom ? ns.scrollHeight : stepsTop;
+  if (atBottom || force) box.scrollTop = box.scrollHeight;
+}
+async function stopRun(run) { try { await api("/api/stop", { run }); toast("Stopping… it will finish its current step first"); } catch (e) { toast(e.message); } }
+async function toggleTrace(run, btn) {
+  const el = $("tr-" + run); if (!el) return;
+  if (openTraces.has(run)) { openTraces.delete(run); el.hidden = true; btn.textContent = "Show steps"; return; }
+  openTraces.add(run); el.hidden = false; btn.textContent = "Hide steps"; fillTrace(run);
+}
+async function fillTrace(run) {
+  const el = $("tr-" + run); if (!el) return;
+  try { const evs = await api("/api/run?id=" + run); el.innerHTML = evs.length ? stepsHTML(evs, false) : `<div class="muted" style="font-size:13px">No step details were recorded for this reply.</div>`; } catch {}
+}
+function copyMsg(i) { const m = visible()[i]; navigator.clipboard.writeText(m.text).then(() => toast("Copied"), () => toast("Couldn't copy")); }
+function speak(i) {
+  if (!("speechSynthesis" in window)) return toast("Your browser can't read aloud");
+  speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(visible()[i].text)));
 }
 async function resetChat() {
   if (!confirm("Erase this conversation from the agent's memory too? (Team memory facts are kept.)")) return;
-  await api("/api/reset", { member: current }); loadTranscript(); toast("New conversation started. Team memory is kept."); }
-
-async function pollActivity() {
-  try {
-    const evs = await api("/api/activity?since=" + lastEvent);
-    if (evs.length) {
-      lastEvent = evs[evs.length - 1].id;
-      const pane = $("activity");
-      pane.insertAdjacentHTML("afterbegin", evs.reverse().map(e =>
-        `<div class="ev"><span class="tm">${e.time}</span><br><b>${esc(e.agent)}</b> ${esc(e.text)}</div>`).join(""));
-      if (sending) { liveLines.push(...evs.reverse().filter(e => e.agent !== "You").map(e => `${e.agent} ${e.text}`));
-        liveLines = liveLines.slice(-5); const t = $("thinking");
-        if (t) t.innerHTML = "Working on it…" + liveLines.map(l => `<span class="live">· ${esc(l)}</span>`).join(""); }
-    }
-    if (!$("activity").innerHTML) $("activity").innerHTML = `<div class="ev" style="color:var(--muted)">Everything your team does shows up here.</div>`;
-  } catch {}
+  await api("/api/reset", { member: S.current }); S.transcript = []; renderMessages(); toast("Conversation forgotten. Team memory is kept.");
 }
 
-let shownApprovals = "";
-async function pollApprovals() {
-  try {
-    const list = await api("/api/approvals");
-    const sig = list.map(a => a.id).join(",");
-    if (sig === shownApprovals) return;
-    shownApprovals = sig;
-    $("approvals").innerHTML = list.map(a => `
-      <div class="approval"><div class="a"><div class="h">Approval needed</div>${esc(a.action)}</div>
-        <button onclick="answer(${a.id}, false)">Decline</button>
-        <button class="yes" onclick="answer(${a.id}, true)">Approve</button></div>`).join("");
-    if (list.length) document.title = "(!) Approval needed · Daniel Corp"; else document.title = "Daniel Corp · AI Team";
-  } catch {}
+/* voice */
+let rec = null;
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return toast("Voice input needs Chrome or Edge");
+  if (rec) { rec.stop(); return; }
+  rec = new SR(); rec.lang = navigator.language || "en-AU"; rec.interimResults = true; rec.continuous = false;
+  const base = $("input").value ? $("input").value + " " : "";
+  rec.onresult = ev => { $("input").value = base + [...ev.results].map(r => r[0].transcript).join(""); autosize(); };
+  rec.onend = () => { rec = null; $("micBtn").classList.remove("on"); $("input").focus(); };
+  rec.onerror = ev => toast("Voice: " + ev.error);
+  $("micBtn").classList.add("on"); rec.start(); toast("Listening… speak now");
+}
+
+/* approvals */
+function renderDock() {
+  const ids = S.approvals.map(a => a.id).join();
+  if (ids !== renderDock.ids) {
+    renderDock.ids = ids;
+    $("dock").innerHTML = S.approvals.map(a => `<div class="appr">
+      <div class="h">✋ ${iconOf(a.agent)} ${esc(nameOf(a.agent))} needs your approval</div>
+      <div class="a">${esc(a.action)}</div>
+      <div class="b"><span class="cd" id="cd-${a.id}"></span><button onclick="answer(${a.id}, false)">Decline</button><button class="yes" onclick="answer(${a.id}, true)">Approve</button></div></div>`).join("");
+    for (const a of S.approvals) if (!S.seenAppr.has(a.id)) { S.seenAppr.add(a.id); beep(); notify(`${nameOf(a.agent)} needs your approval`, a.action.split("\n")[0]); }
+    document.title = S.approvals.length ? `(${S.approvals.length}) Approval needed · Daniel Corp` : "Daniel Corp · AI Team";
+  }
+  for (const a of S.approvals) { const el = $("cd-" + a.id); if (el) el.textContent = `auto-declines in ${dur(a.expires - nowS())}`; }
 }
 async function answer(id, approved) {
-  try { await api("/api/approve", { id, approved }); toast(approved ? "Approved" : "Declined"); } catch (e) { toast(e.message); }
-  shownApprovals = ""; pollApprovals();
+  try { await api("/api/approve", { id, approved }); toast(approved ? "Approved 👍" : "Declined"); } catch (e) { toast(e.message); }
+  S.approvals = S.approvals.filter(a => a.id !== id); renderDock();
 }
 
+/* alerts + theme */
+function beep() {
+  if (!S.notify) return;
+  try { const c = new (window.AudioContext || window.webkitAudioContext)(); const o = c.createOscillator(), g = c.createGain();
+    o.frequency.value = 880; g.gain.setValueAtTime(.08, c.currentTime); g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + .35);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + .35); } catch {}
+}
+function notify(title, body) { if (S.notify && "Notification" in window && Notification.permission === "granted") try { new Notification(title, { body }); } catch {} }
+async function toggleNotify() {
+  if (!S.notify && "Notification" in window && Notification.permission === "default") await Notification.requestPermission();
+  S.notify = !S.notify; store.set("notify", S.notify); $("notifBtn").textContent = S.notify ? "🔔" : "🔕";
+  toast(S.notify ? "You'll hear a sound and get a desktop alert when someone needs you" : "Alerts off");
+}
+function applyTheme(t) {
+  const dark = t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  $("themeBtn").title = `Theme: ${t} (click to change)`;
+  if (S.view === "map") { buildMap(); updateMap(); }
+}
+function cycleTheme() { const order = ["auto", "light", "dark"]; const t = order[(order.indexOf(store.get("theme", "auto")) + 1) % 3]; store.set("theme", t); applyTheme(t); toast("Theme: " + t); }
+
+/* views */
+function setView(v) {
+  S.view = v; $("chatView").hidden = v !== "chat"; $("mapView").hidden = v !== "map";
+  $("vChat").classList.toggle("on", v === "chat"); $("vMap").classList.toggle("on", v === "map");
+  if (v === "map") { buildMap(); updateMap(); renderNow(); renderTicker(); } else renderRunCard(true);
+  renderTeam();
+}
+
+/* live map */
+const MAP = { W: 900, pos: {}, H: 0 }; const CHIPS = {};
+function buildMap() {
+  const nodes = [{ key: "you", reports_to: null }, ...S.team];
+  const kids = k => nodes.filter(n => n.reports_to === k).map(n => n.key);
+  const leaves = k => { const c = kids(k); return c.length ? c.reduce((s, x) => s + leaves(x), 0) : 1; };
+  const pos = {}, levelH = 185; let maxD = 0;
+  (function place(k, x0, x1, d) { pos[k] = { x: (x0 + x1) / 2, y: 70 + d * levelH }; maxD = Math.max(maxD, d);
+    let x = x0; for (const c of kids(k)) { const w = (x1 - x0) * leaves(c) / leaves(k); place(c, x, x + w, d + 1); x += w; } })("you", 20, MAP.W - 20, 0);
+  MAP.pos = pos; MAP.H = 70 + maxD * levelH + 105;
+  const svg = $("map"); svg.setAttribute("viewBox", `0 0 ${MAP.W} ${MAP.H}`);
+  let h = "";
+  for (const n of S.team) { const p = pos[n.reports_to], c = pos[n.key]; if (!p || !c) continue;
+    const my = (p.y + c.y) / 2;
+    const sy = p.y + 86, my2 = (sy + c.y - 36) / 2;
+    h += `<path class="edge" id="e-${n.key}" d="M ${p.x} ${sy} C ${p.x} ${my2}, ${c.x} ${my2}, ${c.x} ${c.y - 36}"/>`; }
+  for (const n of nodes) { const p = pos[n.key], isYou = n.key === "you";
+    h += `<g class="node" id="n-${n.key}" transform="translate(${p.x},${p.y})" onclick="${isYou ? "pick('team_lead')" : `openProfile('${n.key}')`}" tabindex="0" role="button" aria-label="${esc(nameOf(n.key))}">
+      <circle class="halo" r="44"/><circle class="ring" r="32"/><circle class="spinner" r="38"/>
+      <text text-anchor="middle" dominant-baseline="central" font-size="26">${iconOf(n.key)}</text>
+      <text class="nm" text-anchor="middle" y="56">${esc(isYou ? "You" : nameOf(n.key))}</text>
+      <text class="dg" text-anchor="middle" y="75" id="dg-${n.key}"></text></g>`; }
+  svg.innerHTML = h + `<g id="dots"></g>`;
+}
+function updateMap() {
+  for (const m of S.team) {
+    const g = $("n-" + m.key); if (!g) continue;
+    g.setAttribute("class", `node ${m.state}`);
+    const t = stateText(m); const dg = $("dg-" + m.key); if (dg) dg.textContent = t.length > 34 ? t.slice(0, 33) + "…" : t;
+    const e = $("e-" + m.key); const boss = member(m.reports_to);
+    if (e) e.setAttribute("class", "edge" + (boss && boss.state === "delegating" && ["working", "delegating", "waiting"].includes(m.state) ? " hot" : ""));
+  }
+  const you = $("n-you"); if (you) { you.setAttribute("class", "node" + (S.approvals.length ? " waiting" : ""));
+    $("dg-you").textContent = S.approvals.length ? `✋ ${S.approvals.length} approval${S.approvals.length > 1 ? "s" : ""} waiting` : (S.active.length ? "" : "Click to talk to the lead"); }
+}
+function travel(from, to, color) {
+  const a = MAP.pos[from], b = MAP.pos[to], dots = $("dots"); if (!a || !b || !dots) return;
+  let edge = null, forward = true;
+  if (member(to)?.reports_to === from) edge = $("e-" + to); else if (member(from)?.reports_to === to) { edge = $("e-" + from); forward = false; }
+  const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle"); dot.setAttribute("r", 8); dot.setAttribute("fill", color);
+  dots.appendChild(dot); const t0 = performance.now(), T = 900;
+  (function step(t) { const k = Math.min(1, (t - t0) / T); let x, y;
+    if (edge) { const L = edge.getTotalLength(), p = edge.getPointAtLength(L * (forward ? k : 1 - k)); x = p.x; y = p.y; }
+    else { x = a.x + (b.x - a.x) * k; y = a.y + (b.y - a.y) * k; }
+    dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("opacity", k < .85 ? 1 : (1 - k) / .15);
+    if (k < 1) requestAnimationFrame(step); else dot.remove(); })(t0);
+}
+function chip(key, html) {
+  const p = MAP.pos[key]; if (!p || !MAP.H) return;
+  const n = CHIPS[key] = (CHIPS[key] || 0) + 1;
+  const el = document.createElement("div"); el.className = "chip"; el.innerHTML = html;
+  const right = p.x < MAP.W * 0.72;
+  el.style.left = `calc(${p.x / MAP.W * 100}% ${right ? "+" : "-"} 44px)`; el.style.transform = right ? "none" : "translateX(-100%)";
+  el.style.top = `calc(${p.y / MAP.H * 100}% - ${34 - (n - 1) * 28}px)`;
+  $("chips").appendChild(el); setTimeout(() => { el.remove(); CHIPS[key] = Math.max(0, (CHIPS[key] || 1) - 1); }, 2700);
+}
+function animateEvent(e) {
+  if (!$("map").childElementCount) return;
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  if (e.kind === "you") travel("you", e.target, css("--muted"));
+  else if (e.kind === "delegate") { travel(e.key, e.target, css("--accent")); chip(e.key, `👉 Asking ${esc(nameOf(e.target))}`); }
+  else if (e.kind === "report") { travel(e.key, e.target, css("--ok")); chip(e.key, "📨 Reporting back"); }
+  else if (e.kind === "tool") { const [name, arg] = (e.detail || "").split("|"); const t = TOOL[name] || ["🛠️", name]; chip(e.key, `${t[0]} ${esc(t[1])}${arg ? ": " + esc(arg.slice(0, 30)) : ""}`); }
+  else if (e.kind === "search") chip(e.key, `🔎 ${esc((e.detail || "").slice(0, 40))}`);
+  else if (e.kind === "approval") { chip(e.key, "✋ Needs your OK"); travel(e.key, "you", css("--warn")); }
+  else if (e.kind === "error") chip(e.key, "⚠️ Hit a problem");
+  else if (e.kind === "run_end") { const lead = member(e.key); if (lead && lead.reports_to === "you") travel(e.key, "you", css("--ok")); }
+  if (!["system"].includes(e.kind)) renderTicker();
+}
+function renderNow() {
+  const busy = S.team.filter(x => ["working", "delegating", "waiting"].includes(x.state));
+  $("nowcards").innerHTML = S.active.length ? S.active.map(r => {
+    const m = member(r.member) || {};
+    return `<div class="nowcard"><div class="h">${iconOf(r.member)} ${esc(m.name || r.member)}</div>
+      <div class="q">“${esc(r.text)}”</div>
+      <div class="muted" style="margin-bottom:8px;line-height:1.7">${busy.map(b => `${iconOf(b.key)} ${esc(b.name)}: ${esc(stateText(b))}`).join("<br>")}</div>
+      <div class="r"><span class="grow">⏱ ${dur(nowS() - r.started)} · ${r.steps} steps · ${money(r.cost)}</span>
+      <button onclick="pick('${r.member}')">Open</button><button class="danger" onclick="stopRun('${r.run}')">⏹ Stop</button></div></div>`; }).join("")
+    : `<div class="muted" style="font-size:14px">Nobody's working right now. Send a message and watch the team come alive on the map.</div>`;
+}
+function renderTicker() {
+  if (S.view !== "map") return;
+  const evs = S.events.filter(e => !["system", "run_end", "start", "done"].includes(e.kind)).slice(-6).reverse();
+  $("ticker").innerHTML = evs.map(e => { const v = eventView(e);
+    return `<div class="ev ${v.cls}"><span class="ic">${v.ic}</span><span class="tx">${v.who} ${v.text}</span><span class="tm">${e.time}</span></div>`; }).join("")
+    || `<div class="muted" style="font-size:14px">Activity will appear here.</div>`;
+}
+
+/* side panels */
+const FILTERS = { all: "All", work: "Work", you: "Needs you", problems: "Problems" };
+function renderActivity() {
+  $("filters").innerHTML = Object.entries(FILTERS).map(([k, v]) => `<button class="${S.filter === k ? "on" : ""}" onclick="S.filter='${k}';renderActivity()">${v}</button>`).join("");
+  const keep = e => S.filter === "all" ? e.kind !== "run_end" : S.filter === "problems" ? ["error", "declined", "stopped"].includes(e.kind)
+    : S.filter === "you" ? ["approval", "approved", "declined", "you"].includes(e.kind) : ["delegate", "tool", "search", "report"].includes(e.kind);
+  const evs = S.events.filter(keep).slice(-150).reverse();
+  $("activity").innerHTML = evs.map(e => { const v = eventView(e);
+    return `<div class="ev ${v.cls}"><span class="ic">${v.ic}</span><span class="tx">${v.who} ${v.text}</span><span class="tm">${e.time}</span></div>`; }).join("")
+    || `<div class="muted" style="font-size:13px;padding:8px 0">Everything your team does shows up here, live.</div>`;
+}
+function sideTab(which) {
+  const map = { act: ["pAct", "tAct"], tasks: ["pTasks", "tTasks"], mem: ["pMem", "tMem"], usage: ["pUsage", "tUsage"] };
+  for (const [k, [p, t]] of Object.entries(map)) { $(p).hidden = k !== which; $(t).classList.toggle("on", k === which); }
+  if (which === "tasks") refreshTasks(); if (which === "mem") loadMemory(); if (which === "usage") refreshUsage();
+}
 async function refreshTasks() {
-  try {
-    const { tasks, projects } = await api("/api/tasks");
-    $("tasks").innerHTML =
-      `<div class="label">Projects</div>` + (projects.length ? projects.map(p => `<div class="task"><div class="tt">${esc(p.name)}</div>
-        ${p.deadline ? `<span class="pill">due ${esc(p.deadline)}</span>` : ""}<span class="pill">${esc(p.status || "")}</span></div>`).join("")
-        : `<div class="ev" style="color:var(--muted)">No projects yet.</div>`) +
+  try { const { tasks, projects } = await api("/api/tasks");
+    $("pTasks").innerHTML = `<div class="label">Projects</div>` + (projects.length ? projects.map(p => `<div class="task"><div class="tt">📁 ${esc(p.name)}</div>
+        ${p.deadline ? `<span class="tag">due ${esc(p.deadline)}</span>` : ""}<span class="tag">${esc(p.status || "")}</span>${p.description ? `<div class="muted" style="margin-top:4px">${esc(p.description)}</div>` : ""}</div>`).join("")
+        : `<div class="muted" style="font-size:13px">No projects yet. Try: “Add a project called Website, due 20 December”.</div>`) +
       `<div class="label" style="margin-top:16px">Tasks</div>` + (tasks.length ? tasks.map(t => `<div class="task"><div class="tt">#${t.id} ${esc(t.title)}</div>
-        <span class="pill ${esc(t.status)}">${esc(t.status)}</span><span class="pill">${esc(t.owner)}</span>
-        ${t.result ? `<div style="margin-top:6px;color:var(--muted)">${esc(t.result)}</div>` : ""}</div>`).join("")
-        : `<div class="ev" style="color:var(--muted)">No tasks yet.</div>`);
-  } catch {}
-}
-function tab(which) {
-  $("activity").hidden = which !== "act"; $("tasks").hidden = which !== "tasks"; $("mem").hidden = which !== "mem";
-  $("tabAct").classList.toggle("on", which === "act"); $("tabTasks").classList.toggle("on", which === "tasks");
-  $("tabMem").classList.toggle("on", which === "mem");
-  $("usage").hidden = which !== "usage"; $("tabUsage").classList.toggle("on", which === "usage");
-  if (which === "usage") refreshUsage();
-  if (which === "tasks") refreshTasks();
-  if (which === "mem") loadMemory();
-}
-const money = v => "$" + (v < 1 ? v.toFixed(4) : v.toFixed(2));
-function bars(obj, labelFn) {
-  const entries = Object.entries(obj); const max = Math.max(...entries.map(e => e[1]), 0.0001);
-  return entries.map(([k, v]) => `<div class="bar"><span class="bl">${esc(labelFn ? labelFn(k) : k)}</span>
-    <span class="bt"><span style="width:${Math.max(2, v / max * 100)}%"></span></span><span class="bv">${money(v)}</span></div>`).join("")
-    || `<div class="ev" style="color:var(--muted)">Nothing yet.</div>`;
-}
-async function refreshUsage() {
-  try {
-    const u = await api("/api/usage");
-    const day = k => new Date(k + "T00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
-    $("usage").innerHTML = `
-      <div class="stats">
-        <div class="stat"><div class="sl">This session</div><div class="sv">${money(u.session)}</div></div>
-        <div class="stat"><div class="sl">Today</div><div class="sv">${money(u.today)}</div></div>
-        <div class="stat ${u.over_budget ? "warn" : ""}"><div class="sl">This month${u.budget ? ` / $${u.budget}` : ""}</div><div class="sv">${money(u.month)}</div></div>
-        <div class="stat"><div class="sl">All time</div><div class="sv">${money(u.all_time)}</div></div>
-      </div>
-      ${u.over_budget ? `<div class="approval" style="margin:0 0 12px"><div class="a"><div class="h">Over your monthly budget</div>
-        You've spent ${money(u.month)} of your $${u.budget} budget this month.</div></div>` : ""}
-      <div class="label">By agent (all time)</div>${bars(u.by_agent)}
-      <div class="label" style="margin-top:16px">Last 14 days</div>${bars(u.by_day, day)}
-      <div class="ev" style="color:var(--muted);border:0;margin-top:12px">Estimated from token counts at list prices, counting since
-        ${esc(u.since || "today")} (${u.calls} API calls). Your exact balance and remaining credits are in the
-        <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="color:var(--accent)">Claude Console</a>.
-        Set MONTHLY_BUDGET_USD in .env to get a warning.</div>`;
-  } catch {}
+        <span class="tag ${esc(t.status)}">${esc(t.status)}</span><span class="tag">${iconOf(t.owner)} ${esc(nameOf(t.owner))}</span>${t.due ? `<span class="tag">due ${esc(t.due)}</span>` : ""}
+        ${t.result ? `<div class="muted" style="margin-top:6px">${esc(t.result)}</div>` : ""}</div>`).join("")
+        : `<div class="muted" style="font-size:13px">The team lead records multi-step work here.</div>`); } catch {}
 }
 async function loadMemory() { try { $("memText").value = (await api("/api/memory")).text; } catch {} }
-async function saveMemory() {
-  try { await api("/api/memory", { text: $("memText").value }); toast("Team memory saved"); } catch (e) { toast(e.message); }
+async function saveMemory() { try { await api("/api/memory", { text: $("memText").value }); toast("Team memory saved"); } catch (e) { toast(e.message); } }
+function bars(obj, labelFn) {
+  const entries = Object.entries(obj || {}); const max = Math.max(...entries.map(e => e[1]), 0.0001);
+  return entries.map(([k, v]) => `<div class="bar"><span class="bl">${esc(labelFn ? labelFn(k) : k)}</span><span class="bt"><span style="width:${Math.max(2, v / max * 100)}%"></span></span><span class="bv">${money(v)}</span></div>`).join("")
+    || `<div class="muted" style="font-size:13px">Nothing yet.</div>`;
+}
+async function refreshUsage(quiet) {
+  if (quiet && refreshUsage.t && Date.now() - refreshUsage.t < 4000) return; refreshUsage.t = Date.now();
+  try { const u = await api("/api/usage");
+    const day = k => new Date(k + "T00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+    $("pUsage").innerHTML = `<div class="stats">
+      <div class="stat"><div class="sl">This session</div><div class="sv">${money(u.session)}</div></div>
+      <div class="stat"><div class="sl">Today</div><div class="sv">${money(u.today)}</div></div>
+      <div class="stat ${u.over_budget ? "warn" : ""}"><div class="sl">This month${u.budget ? ` / $${u.budget}` : ""}</div><div class="sv">${money(u.month)}</div></div>
+      <div class="stat"><div class="sl">All time</div><div class="sv">${money(u.all_time)}</div></div></div>
+      ${u.over_budget ? `<div class="appr" style="margin-bottom:12px;box-shadow:none"><div class="h">Over your monthly budget</div>You've spent ${money(u.month)} of $${u.budget} this month.</div>` : ""}
+      <div class="label">By agent (all time)</div>${bars(u.by_agent)}
+      <div class="label" style="margin-top:16px">Last 14 days</div>${bars(u.by_day, day)}
+      <div class="muted" style="font-size:12px;margin-top:12px;line-height:1.5">Estimated from token counts at list prices since ${esc(u.since || "today")} (${u.calls} calls).
+        Exact balance: <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="color:var(--accent)">Claude Console</a>.
+        Set MONTHLY_BUDGET_USD in .env for a warning.</div>`; } catch {}
 }
 
+/* profile */
+async function openProfile(key) {
+  let p; try { p = await api("/api/agent?key=" + key); } catch (e) { return toast(e.message); }
+  const m = member(key) || {};
+  const tools = p.tools.filter(t => t.name !== "delegate");
+  $("drawer").innerHTML = `<div class="dhead"><div class="av ${m.state}">${iconOf(key)}</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:17px">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(ROLE[key] || "")}</div></div>
+      <button class="ghost hbtn" onclick="closeAll()" aria-label="Close">✕</button></div>
+    <div class="dbody">
+      <div class="dsec"><div class="row"><span>Right now</span><span class="state-tag ${m.state}">${esc(m.state === "idle" ? "Idle, ready for work" : stateText(m))}</span></div>
+        <div class="row"><span>Switched on</span><label class="switch"><input type="checkbox" ${m.enabled ? "checked" : ""} onchange="toggle('${key}', this.checked)"><span></span></label></div>
+        <div class="row"><span>Reports to</span><span>${iconOf(p.reports_to)} ${esc(nameOf(p.reports_to))}</span></div>
+        ${p.manages.length ? `<div class="row"><span>Manages</span><span>${p.manages.map(esc).join(", ")}</span></div>` : ""}</div>
+      <div class="dsec"><h4>Brain (model)</h4>
+        <select onchange="setModel('${key}', this.value)" aria-label="Model">${p.models.map(x => `<option value="${x}" ${x === p.model ? "selected" : ""}>${x}  ($${p.prices[x][0]} in / $${p.prices[x][1]} out per M tokens)</option>`).join("")}</select>
+        <div class="muted" style="font-size:12px;margin-top:6px">Opus is the smartest, Sonnet is balanced, Haiku is the fastest and cheapest. Changes apply to the next message.</div></div>
+      <div class="dsec"><h4>What it can do</h4>${tools.map(t => { const x = TOOL[t.name] || ["🛠️", t.name];
+          return `<div class="cap"><span class="ic">${x[0]}</span><span>${esc(x[1])}<div class="muted" style="font-size:12px">${esc(t.description)}</div></span></div>`; }).join("")}
+        ${p.manages.length ? `<div class="cap"><span class="ic">👉</span><span>Hands work to ${p.manages.map(esc).join(", ")}</span></div>` : ""}</div>
+      <div class="dsec"><h4>What it won't do</h4>${p.limits.map(l => `<div class="cap no"><span class="ic">🚫</span><span>${esc(l)}</span></div>`).join("")}</div>
+      <div class="dsec"><h4>Spending</h4><div class="row"><span>This session</span><b>${money(p.cost_session)}</b></div><div class="row"><span>All time</span><b>${money(p.cost_all)}</b></div></div>
+      <div class="dsec"><h4>Recent work</h4>${p.recent.length ? p.recent.map(e => { const v = eventView(e);
+          return `<div class="ev ${v.cls}"><span class="ic">${v.ic}</span><span class="tx">${v.text}</span><span class="tm">${e.time}</span></div>`; }).join("") : `<div class="muted" style="font-size:13px">Nothing yet this session.</div>`}</div>
+      <button class="primary" style="width:100%;padding:10px" onclick="closeAll(); pick('${key}')">💬 Chat with ${esc(p.name)}</button>
+    </div>`;
+  $("drawer").classList.add("show"); $("scrim").classList.add("show");
+}
+async function setModel(key, model) { try { await api("/api/model", { key, model }); toast(`${nameOf(key)} now uses ${model}`); } catch (e) { toast(e.message); } }
+function closeAll() { $("drawer").classList.remove("show"); $("modal").classList.remove("show"); $("scrim").classList.remove("show"); }
+
+/* connections + help */
+function modal(title, body) { $("modal").innerHTML = `<div class="mhead"><span class="grow">${title}</span><button class="ghost hbtn" onclick="closeAll()" aria-label="Close">✕</button></div><div class="mbody">${body}</div>`;
+  $("modal").classList.add("show"); $("scrim").classList.add("show"); }
+const HOWTO = { claude: "Add ANTHROPIC_API_KEY from console.anthropic.com to .env", calendar: "Add ICLOUD_EMAIL and an app-specific password (appleid.apple.com) to .env",
+  wordpress: "WordPress → Users → Profile → Application Passwords, then add WP_URL, WP_USERNAME, WP_APP_PASSWORD to .env", github: "Add GITHUB_TOKEN, GITHUB_REPO and REPO_PATH to .env" };
+async function openConnections() {
+  let list; try { list = await api("/api/health"); } catch (e) { return toast(e.message); }
+  modal("🔌 Connections", `<div class="muted" style="font-size:14px">What your team is plugged into. Keys live in your .env file on this computer.</div>` +
+    list.map(c => `<div class="conn"><span class="dot ${c.configured ? "cfg" : ""}" id="cdot-${c.id}"></span><div class="grow">
+      <div><b>${esc(c.name)}</b> <span class="muted" style="font-size:13px">· used by ${esc(c.used_by)}</span></div>
+      <div class="res muted" id="cr-${c.id}">${c.configured ? "Set up. Press Test to check it works." : `Not set up yet. ${esc(HOWTO[c.id] || "")}, then restart web.py.`}</div></div>
+      <button onclick="testConn('${c.id}')" ${c.configured ? "" : "disabled"}>Test</button></div>`).join(""));
+}
+async function testConn(id) {
+  $("cr-" + id).textContent = "Testing…";
+  try { const r = await api("/api/health/test", { id });
+    $("cdot-" + id).className = "dot " + (r.ok ? "ok" : "bad"); $("cr-" + id).textContent = (r.ok ? "✓ " : "✗ ") + r.message;
+    $("cr-" + id).style.color = r.ok ? "var(--ok)" : "var(--danger)"; } catch (e) { $("cr-" + id).textContent = e.message; }
+}
+function openHelp() {
+  const desc = { team_lead: "Your manager. Give it anything: it breaks the work up, hands it to the right person, checks the results and reports back. When something goes wrong it investigates the logs before asking you.",
+    assistant: "Reads and manages your Apple Calendar, finds free time, keeps your projects and deadlines, and gives briefings.",
+    travel: "Researches flights, hotels and itineraries with live web search, checks your calendar for clashes, and gives 2–3 options with links. Never books or pays.",
+    web: "Writes and edits WordPress posts and pages as drafts, researches facts, and publishes only when you approve.",
+    senior_dev: "Plans and writes code on GitHub, reviews the junior's work, and opens pull requests for you to approve.",
+    junior_dev: "Handles small coding tasks and learns from the senior's feedback over time." };
+  modal("❔ What can my team do?", `<div class="faq">
+    ${S.team.map(m => `<h5>${iconOf(m.key)} ${esc(m.name)}</h5><p>${esc(desc[m.key] || ROLE[m.key] || "")}</p>`).join("")}
+    <h5>🛡️ Is it safe?</h5><p>Anything that spends money, changes something live, deletes, or affects other people waits for your Approve. Unanswered requests are declined after 10 minutes. You can Stop any request mid-way.</p>
+    <h5>🧠 Does it remember me?</h5><p>Yes. Each chat is saved, and lasting facts go into Team memory (right panel) that every agent reads. You can edit or erase it anytime.</p>
+    <h5>👀 Can I see what they're doing?</h5><p>Live, step by step: the team map, the progress card in chat, “Show steps” under every reply, and the Activity feed.</p>
+    <h5>🔀 Can several agents work at once?</h5><p>Yes. Message different agents and they work in parallel; each one handles one request at a time.</p>
+    <h5>💸 What does it cost?</h5><p>Every reply shows its cost. The header shows today, this month and all time; the Usage tab breaks it down by agent and day. Switch any agent to a cheaper model in its profile.</p>
+    <h5>🏠 Where does my data live?</h5><p>On your computer. Chats, memory and logs stay in the data folder and are never uploaded to GitHub.</p>
+    <h5>⏰ Does it work when the panel is closed?</h5><p>Agents work while web.py (the black window) is running. Closing the browser tab is fine; closing the black window stops them.</p>
+    <h5>➕ Can I add more agents?</h5><p>Yes. New agents appear here automatically with their own switch, profile and spot on the map.</p>
+    <h5>⌨️ Shortcuts</h5><p>Alt+1–7 switch agent · Alt+M map · Alt+C chat · / focus the message box · ? this help · Esc close.</p></div>`);
+}
+
+/* input + keyboard */
 function autosize() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
 $("input").addEventListener("input", autosize);
 $("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+document.addEventListener("keydown", e => {
+  const typing = ["TEXTAREA", "INPUT", "SELECT"].includes(document.activeElement.tagName);
+  if (e.key === "Escape") closeAll();
+  if (e.altKey && /^[1-9]$/.test(e.key)) { const m = S.team[+e.key - 1]; if (m) { e.preventDefault(); pick(m.key); } }
+  if (e.altKey && e.key.toLowerCase() === "m") { e.preventDefault(); setView("map"); }
+  if (e.altKey && e.key.toLowerCase() === "c") { e.preventDefault(); setView("chat"); }
+  if (!typing && e.key === "/") { e.preventDefault(); setView("chat"); $("input").focus(); }
+  if (!typing && e.key === "?") { e.preventDefault(); openHelp(); }
+});
+window.addEventListener("resize", () => { if (S.view === "map") { buildMap(); updateMap(); } });
 
-(async () => { await refreshTeam(); await loadTranscript(); refreshTasks(); pollActivity(); })();
-setInterval(refreshTeam, 3000); setInterval(pollActivity, 1500); setInterval(pollApprovals, 1000);
+(async () => {
+  applyTheme(store.get("theme", "auto"));
+  S.notify = store.get("notify", false) && "Notification" in window && Notification.permission === "granted";
+  $("notifBtn").textContent = S.notify ? "🔔" : "🔕";
+  if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) $("micBtn").hidden = true;
+  await poll(); await loadTranscript(); renderActivity(); refreshTasks();
+  setInterval(poll, 700);
+  setInterval(() => { renderDock(); if (S.view === "map") renderNow(); }, 1000);
+})();
 </script>
 </body>
 </html>

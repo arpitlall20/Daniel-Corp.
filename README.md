@@ -48,9 +48,20 @@ python web.py          # opens http://localhost:8000 in your browser
 ```
 On Windows you can just double-click **start.bat**.
 
-In the panel you can switch agents on/off, chat with anyone, approve or decline their actions,
-watch live activity and see the task board. It only runs on your computer. Press Ctrl+C in the
-terminal window to stop it.
+What's in it:
+- **Live team map**: an animated org chart. Watch work flow between agents, see what each is doing,
+  who's waiting on you, and who hit a problem. Click anyone for their profile.
+- **Chat with anyone**, with a live progress card (every step, timer, cost so far, **Stop** button)
+  and **Show steps** under every reply.
+- **Approvals** pop up bottom-right (with sound and desktop alerts if you turn them on 🔔);
+  unanswered ones are declined after 10 minutes.
+- **Agent profiles**: what each can and won't do, switch its model, spending, recent work.
+- **Connections** 🔌: see and test Claude, Apple Calendar, WordPress and GitHub.
+- Activity feed with filters, task board, team memory, usage by agent and day.
+- Voice input 🎤 (Chrome/Edge), read-aloud 🔊, light/dark theme, keyboard shortcuts (press **?**).
+
+It only runs on your computer. Agents keep working if you close the browser tab; closing the
+terminal window stops them.
 
 ### Terminal
 

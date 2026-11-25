@@ -48,5 +48,11 @@ def set_enabled(key: str, on: bool) -> str:
     return f"{key} is now {'ON' if on else 'OFF'}."
 
 
+def set_model(key: str, model: str) -> None:
+    cfg = load()
+    cfg["agents"][key]["model"] = model
+    save(cfg)
+
+
 def model_for(key: str) -> str:
     return load()["agents"][key]["model"]
