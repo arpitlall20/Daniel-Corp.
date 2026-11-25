@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from .config import is_enabled
 from .tools.base import S, Tool, schema
@@ -19,10 +20,22 @@ COST_LOG: dict[str, float] = defaultdict(float)
 EVENTS: list[dict] = []  # live activity feed (shown in the web panel)
 
 
+ACTIVITY_LOG = Path(__file__).resolve().parents[1] / "data" / "activity.log"   # survives restarts
+
+
 def log_event(agent: str, text: str) -> None:
+    import json
     import time
-    EVENTS.append({"id": len(EVENTS) + 1, "time": time.strftime("%H:%M:%S"), "agent": agent, "text": text})
+    ev = {"id": max(int(time.time() * 1000), (EVENTS[-1]["id"] + 1) if EVENTS else 0), "time": time.strftime("%H:%M:%S"),
+          "date": time.strftime("%Y-%m-%d"), "agent": agent, "text": text}
+    EVENTS.append(ev)
     del EVENTS[:-500]
+    try:
+        ACTIVITY_LOG.parent.mkdir(exist_ok=True)
+        with ACTIVITY_LOG.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(ev, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 _client = None
 
@@ -76,7 +89,7 @@ class Agent:
         print(f"  -> {self.name} delegates to {self.team[member].name}: {task[:90]}")
         log_event(self.name, f"delegated to {self.team[member].name}: {task[:140]}")
         result = self.team[member].run(task)
-        log_event(self.team[member].name, f"reported back to {self.name}")
+        log_event(self.team[member].name, f"reported back to {self.name}: {result[:400]}")
         return result
 
     def run(self, task: str, history: list | None = None) -> str:
@@ -108,6 +121,8 @@ class Agent:
                             log_event(self.name, f"using {block.name}")
                         tool = tools_by_name.get(block.name)
                         out = tool.run(**block.input) if tool else f"Unknown tool {block.name}"
+                        if out.startswith("ERROR"):
+                            log_event(self.name, f"{block.name} FAILED: {out[:400]}")
                         results.append({"type": "tool_result", "tool_use_id": block.id, "content": out})
                 messages.append({"role": "user", "content": results})
             elif resp.stop_reason == "pause_turn":   # long server-side search; just continue
