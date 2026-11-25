@@ -1,0 +1,4 @@
+anthropic>=0.60
+caldav>=1.4
+PyGithub>=2.3
+python-dotenv>=1.0

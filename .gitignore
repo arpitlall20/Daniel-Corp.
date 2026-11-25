@@ -1,0 +1,5 @@
+.env
+data/team.db
+__pycache__/
+*.pyc
+workspace/
