@@ -67,6 +67,12 @@ python main.py tasks                             # show the shared task board
 Inside chat you can also type `switch travel` (talk to someone else), `status`, `on travel`, `off senior_dev`, `quit`.
 Each member remembers your conversation with them until you quit.
 
+## Spending
+
+The header shows estimated spend **today / this month / all time**; click it (or the Usage tab) for a
+breakdown by agent and by day. It's saved in `data/usage.json`, so it keeps counting across restarts.
+Set `MONTHLY_BUDGET_USD` in `.env` to get a warning. Exact balance: console.anthropic.com > Billing.
+
 ## Memory
 
 - **Saved chats**: every conversation is saved in `data/chats/` and continues after a restart.

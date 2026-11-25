@@ -105,6 +105,17 @@
   button.earlier { border: 0; background: none; color: var(--accent); font-size: 13px; padding: 4px 8px; }
   button.earlier:hover { text-decoration: underline; }
   .remembers { font-size: 12px; margin-top: 6px; color: var(--ok); }
+  .cost.over #cMonth { color: var(--danger); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .stat.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .stat .sl { font-size: 12px; color: var(--muted); } .stat .sv { font-size: 20px; font-weight: 600; margin-top: 2px; }
+  .bar { display: grid; grid-template-columns: 110px 1fr 64px; gap: 8px; align-items: center; font-size: 12px; margin-bottom: 6px; }
+  .bar .bl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+  .bar .bt { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .bar .bt span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .bar .bv { text-align: right; font-variant-numeric: tabular-nums; }
+  .tabs button { padding: 13px 4px; font-size: 13px; }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg);
     padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
   .toast.show { opacity: 1; }
@@ -117,7 +128,8 @@
 <body>
 <header>
   <h1>Daniel Corp <span>· AI team</span></h1>
-  <div class="cost">This session: <b id="total">$0.0000</b> USD</div>
+  <div class="cost" id="costBar" onclick="tab('usage')" title="Click for the full breakdown" style="cursor:pointer">
+    Today <b id="cToday">$0.00</b> · This month <b id="cMonth">$0.00</b> · All time <b id="cAll">$0.00</b> USD</div>
 </header>
 <main>
   <aside class="team">
@@ -148,7 +160,9 @@
       <button class="on" id="tabAct" onclick="tab('act')">Activity</button>
       <button id="tabTasks" onclick="tab('tasks')">Task board</button>
       <button id="tabMem" onclick="tab('mem')">Memory</button>
+      <button id="tabUsage" onclick="tab('usage')">Usage</button>
     </div>
+    <div class="pane" id="usage" hidden></div>
     <div class="pane" id="activity"></div>
     <div class="pane" id="tasks" hidden></div>
     <div class="pane" id="mem" hidden>
@@ -235,7 +249,12 @@ function renderTeam() {
 }
 
 async function refreshTeam() {
-  try { const d = await api("/api/team"); team = d.members; $("total").textContent = "$" + d.total_cost.toFixed(4); renderTeam(); } catch {}
+  try {
+    const d = await api("/api/team"); team = d.members; const u = d.usage;
+    $("cToday").textContent = money(u.today); $("cMonth").textContent = money(u.month); $("cAll").textContent = money(u.all_time);
+    $("costBar").classList.toggle("over", u.over_budget);
+    renderTeam(); if (!$("usage").hidden) refreshUsage();
+  } catch {}
 }
 async function toggle(key, on) {
   try { const d = await api("/api/toggle", { key, enabled: on }); team = d.members; renderTeam(); toast(d.message); } catch (e) { toast(e.message); }
@@ -337,8 +356,38 @@ function tab(which) {
   $("activity").hidden = which !== "act"; $("tasks").hidden = which !== "tasks"; $("mem").hidden = which !== "mem";
   $("tabAct").classList.toggle("on", which === "act"); $("tabTasks").classList.toggle("on", which === "tasks");
   $("tabMem").classList.toggle("on", which === "mem");
+  $("usage").hidden = which !== "usage"; $("tabUsage").classList.toggle("on", which === "usage");
+  if (which === "usage") refreshUsage();
   if (which === "tasks") refreshTasks();
   if (which === "mem") loadMemory();
+}
+const money = v => "$" + (v < 1 ? v.toFixed(4) : v.toFixed(2));
+function bars(obj, labelFn) {
+  const entries = Object.entries(obj); const max = Math.max(...entries.map(e => e[1]), 0.0001);
+  return entries.map(([k, v]) => `<div class="bar"><span class="bl">${esc(labelFn ? labelFn(k) : k)}</span>
+    <span class="bt"><span style="width:${Math.max(2, v / max * 100)}%"></span></span><span class="bv">${money(v)}</span></div>`).join("")
+    || `<div class="ev" style="color:var(--muted)">Nothing yet.</div>`;
+}
+async function refreshUsage() {
+  try {
+    const u = await api("/api/usage");
+    const day = k => new Date(k + "T00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+    $("usage").innerHTML = `
+      <div class="stats">
+        <div class="stat"><div class="sl">This session</div><div class="sv">${money(u.session)}</div></div>
+        <div class="stat"><div class="sl">Today</div><div class="sv">${money(u.today)}</div></div>
+        <div class="stat ${u.over_budget ? "warn" : ""}"><div class="sl">This month${u.budget ? ` / $${u.budget}` : ""}</div><div class="sv">${money(u.month)}</div></div>
+        <div class="stat"><div class="sl">All time</div><div class="sv">${money(u.all_time)}</div></div>
+      </div>
+      ${u.over_budget ? `<div class="approval" style="margin:0 0 12px"><div class="a"><div class="h">Over your monthly budget</div>
+        You've spent ${money(u.month)} of your $${u.budget} budget this month.</div></div>` : ""}
+      <div class="label">By agent (all time)</div>${bars(u.by_agent)}
+      <div class="label" style="margin-top:16px">Last 14 days</div>${bars(u.by_day, day)}
+      <div class="ev" style="color:var(--muted);border:0;margin-top:12px">Estimated from token counts at list prices, counting since
+        ${esc(u.since || "today")} (${u.calls} API calls). Your exact balance and remaining credits are in the
+        <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="color:var(--accent)">Claude Console</a>.
+        Set MONTHLY_BUDGET_USD in .env to get a warning.</div>`;
+  } catch {}
 }
 async function loadMemory() { try { $("memText").value = (await api("/api/memory")).text; } catch {} }
 async function saveMemory() {

@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 
-from team import approvals, chats  # noqa: E402
+from team import approvals, chats, usage  # noqa: E402
 from team.agent import COST_LOG, EVENTS, log_event  # noqa: E402
 from team.config import load, set_enabled  # noqa: E402
 from team.roster import all_agents, build_team  # noqa: E402
@@ -77,7 +77,7 @@ def team_state() -> dict:
             "busy": LOCKS[k].locked(), "reports_to": REPORTS_TO.get(k, "you"),
             "cost": round(COST_LOG.get(a.name, 0.0), 4),
         })
-    return {"members": members, "total_cost": round(sum(COST_LOG.values()), 4)}
+    return {"members": members, "total_cost": round(sum(COST_LOG.values()), 4), "usage": usage.summary()}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -111,6 +111,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, [e for e in EVENTS if e["id"] > since])
         if path == "/api/memory":
             return self._send(200, {"text": memory_text()})
+        if path == "/api/usage":
+            return self._send(200, {**usage.summary(), "session": round(sum(COST_LOG.values()), 4)})
         if path == "/api/approvals":
             with _plock:
                 return self._send(200, [{"id": i["id"], "action": i["action"]} for i in PENDING.values()])

@@ -6,6 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from . import usage
 from .config import is_enabled
 from .tools.base import S, Tool, schema
 
@@ -105,7 +106,9 @@ class Agent:
             kwargs = {"tools": tool_specs} if tool_specs else {}
             resp = client().messages.create(model=self.model, max_tokens=8000, system=system_blocks,
                                             messages=messages, **kwargs)
-            COST_LOG[self.name] += _cost(self.model, resp.usage)
+            call_cost = _cost(self.model, resp.usage)
+            COST_LOG[self.name] += call_cost
+            usage.record(self.name, call_cost)
             messages.append({"role": "assistant", "content": resp.content})
             for block in resp.content:
                 if block.type == "server_tool_use":
@@ -138,4 +141,6 @@ def cost_report() -> str:
     if not COST_LOG:
         return "No API spend this session."
     lines = [f"  {name:<24} ${c:.4f}" for name, c in COST_LOG.items()]
-    return "Session cost (USD, estimate):\n" + "\n".join(lines) + f"\n  {'TOTAL':<24} ${sum(COST_LOG.values()):.4f}"
+    u = usage.summary()
+    return ("Session cost (USD, estimate):\n" + "\n".join(lines) + f"\n  {'TOTAL':<24} ${sum(COST_LOG.values()):.4f}"
+            f"\nToday ${u['today']:.4f} | This month ${u['month']:.4f} | All time ${u['all_time']:.4f} (since {u['since']})")
