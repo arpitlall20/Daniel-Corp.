@@ -55,7 +55,12 @@ What's in it:
   and **Show steps** under every reply.
 - **Approvals** pop up bottom-right (with sound and desktop alerts if you turn them on 🔔);
   unanswered ones are declined after 10 minutes.
-- **Agent profiles**: what each can and won't do, switch its model, spending, recent work.
+- **＋ Add team member**: name, emoji, job description (or start from a template: researcher,
+  social media, email writer, finance tracker, customer support), abilities, model, and manager.
+- **Drag and drop** anyone onto a new manager, on the live map or in the team list. Managers can
+  delegate to their own people; moves that would make someone report to their own team are blocked.
+- **Agent profiles**: what each can and won't do, change manager or model, spending, recent work;
+  edit or remove members you added.
 - **Connections** 🔌: see and test Claude, Apple Calendar, WordPress and GitHub.
 - Activity feed with filters, task board, team memory, usage by agent and day.
 - Voice input 🎤 (Chrome/Edge), read-aloud 🔊, light/dark theme, keyboard shortcuts (press **?**).
@@ -93,6 +98,12 @@ It has no delete tool. Works with self-hosted WordPress and WordPress.com plans 
 The header shows estimated spend **today / this month / all time**; click it (or the Usage tab) for a
 breakdown by agent and by day. It's saved in `data/usage.json`, so it keeps counting across restarts.
 Set `MONTHLY_BUDGET_USD` in `.env` to get a warning. Exact balance: console.anthropic.com > Billing.
+
+## Your org chart
+
+Agents you add and any changes to who reports to whom are saved in `data/org.json` on your computer.
+Built-in agents can be switched off but not removed; agents you added can be edited or removed (their
+team moves up to their manager). The Team Lead always reports to you.
 
 ## Memory
 

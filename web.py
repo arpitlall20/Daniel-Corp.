@@ -29,18 +29,21 @@ except ImportError:
 from team import approvals, chats, usage  # noqa: E402
 from team import agent as core  # noqa: E402
 from team.config import load, set_enabled, set_model  # noqa: E402
-from team.roster import all_agents, build_team  # noqa: E402
+from team import org  # noqa: E402
 from team.tools.memory import MEMORY, memory_text  # noqa: E402
 from team.tools.tasks import list_projects, list_tasks  # noqa: E402
 
 HOST, PORT = "127.0.0.1", int(os.getenv("PORT", "8000"))
 PAGE = Path(__file__).parent / "web" / "index.html"
 
-AGENTS = all_agents(build_team())
-ORDER = ["team_lead", "assistant", "travel", "web", "senior_dev", "junior_dev"]
-ORDER = [k for k in ORDER if k in AGENTS] + [k for k in AGENTS if k not in ORDER]  # new agents appear automatically
-REPORTS_TO = {sub: k for k, a in AGENTS.items() for sub in a.team}
+AGENTS = org.build_all()   # live dict: agents you add or move update it in place
 TRANSCRIPTS: dict[str, list] = {k: chats.load(k) for k in AGENTS}   # saved on disk, survives restarts
+
+
+def transcript(key: str) -> list:
+    if key not in TRANSCRIPTS:
+        TRANSCRIPTS[key] = chats.load(key)
+    return TRANSCRIPTS[key]
 ACTIVE: dict[str, dict] = {}   # run id -> {member, started, text}
 
 # What each agent can't do (shown on its profile, so nobody has to guess)
@@ -93,9 +96,9 @@ def start_run(key: str, text: str) -> str:
 
 def _run(run_id: str, key: str, text: str) -> None:
     core.begin_run(run_id)
-    history = chats.model_history(TRANSCRIPTS[key])
-    TRANSCRIPTS[key].append({"role": "you", "text": text, "ts": time.time(), "run": run_id})
-    chats.save(key, TRANSCRIPTS[key])
+    history = chats.model_history(transcript(key))
+    transcript(key).append({"role": "you", "text": text, "ts": time.time(), "run": run_id})
+    chats.save(key, transcript(key))
     core.log_event("You", f"to {AGENTS[key].name}: {text[:160]}", "you", key="you", target=key, detail=text)
     status = "done"
     try:
@@ -109,11 +112,11 @@ def _run(run_id: str, key: str, text: str) -> None:
         if st.get("run") == run_id and st.get("state") in ("working", "delegating", "waiting"):
             core.set_status(k, "idle", "", task="")
     info = core.RUNS.get(run_id, {})
-    TRANSCRIPTS[key].append({"role": "agent", "text": reply, "ts": time.time(), "run": run_id, "status": status,
+    transcript(key).append({"role": "agent", "text": reply, "ts": time.time(), "run": run_id, "status": status,
                              "secs": round(time.time() - ACTIVE[run_id]["started"], 1),
                              "cost": round(info.get("cost", 0.0), 5), "steps": info.get("steps", 0)})
-    chats.save(key, TRANSCRIPTS[key])
-    core.log_event(AGENTS[key].name, f"request {status}", "run_end", key=key)
+    chats.save(key, transcript(key))
+    core.log_event(AGENTS[key].name if key in AGENTS else key, f"request {status}", "run_end", key=key)
     ACTIVE.pop(run_id, None)
     core.CANCELLED.discard(run_id)
 
@@ -133,15 +136,17 @@ def team_state() -> dict:
     cfg = load()["agents"]
     spent = usage.summary()["by_agent"]
     busy = {r["member"] for r in ACTIVE.values()}
+    reports = org.parents()
     members = []
-    for k in ORDER:
+    for k in org.ordered_keys():
         a = AGENTS[k]
         enabled = cfg.get(k, {}).get("enabled", False)
         st = core.STATUS.get(k, {"state": "idle", "doing": "", "task": "", "since": 0})
         state = st["state"] if (enabled or st["state"] != "idle") else "off"
         members.append({"key": k, "name": a.name, "model": a.model, "enabled": enabled, "state": state,
                         "doing": st.get("doing", ""), "task": st.get("task", ""), "since": st.get("since", 0),
-                        "busy": k in busy, "reports_to": REPORTS_TO.get(k, "you"), "manages": list(a.team),
+                        "busy": k in busy, "reports_to": reports.get(k, "team_lead"), "manages": list(a.team),
+                        "icon": a.icon, "role": a.role, "custom": a.custom,
                         "cost": round(core.COST_LOG.get(a.name, 0.0), 5), "cost_all": spent.get(a.name, 0.0)})
     return {"members": members}
 
@@ -175,16 +180,26 @@ def run_events(run_id: str) -> list:
         return []
 
 
+def _team_of(key: str) -> set:
+    p, found, frontier = org.parents(), set(), {key}
+    while frontier:
+        frontier = {k for k, b in p.items() if b in frontier and k not in found}
+        found |= frontier
+    return found
+
+
 def profile(key: str) -> dict:
     a = AGENTS[key]
     recent = [e for e in core.EVENTS if e.get("key") == key and e.get("kind") not in ("start", "done")][-12:]
     return {"key": key, "name": a.name, "model": a.model, "models": list(core.PRICES),
             "prices": {m: p[:2] for m, p in core.PRICES.items()},
-            "reports_to": REPORTS_TO.get(key, "you"), "manages": [AGENTS[k].name for k in a.team],
+            "reports_to": org.parents().get(key, "team_lead"), "manages": [AGENTS[k].name for k in a.team],
+            "icon": a.icon, "role": a.role, "custom": a.custom, "spec": org.spec_of(key),
+            "can_report_to": ["you"] + [k for k in org.ordered_keys() if k != key and k not in _team_of(key)],
             "tools": [{"name": t.name, "description": t.description.split(". ")[0]} for t in a.tools]
                      + [{"name": s.get("name", "tool"), "description": "Search the web for current information"}
                         for s in a.server_tools],
-            "limits": LIMITS.get(key, []), "cost_session": round(core.COST_LOG.get(a.name, 0.0), 5),
+            "limits": LIMITS.get(key, ["Only has the abilities you gave it", "Asks you before anything risky"]), "cost_session": round(core.COST_LOG.get(a.name, 0.0), 5),
             "cost_all": usage.summary()["by_agent"].get(a.name, 0.0), "recent": recent[::-1]}
 
 
@@ -256,7 +271,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/team":
             return self._send(200, {**team_state(), "usage": usage.summary()})
         if path == "/api/transcript":
-            return self._send(200, TRANSCRIPTS.get(q.get("member", ""), []))
+            key = q.get("member", "")
+            return self._send(200, transcript(key) if key in AGENTS else [])
+        if path == "/api/abilities":
+            return self._send(200, {"abilities": org.abilities_catalog(), "models": org.MODELS})
         if path == "/api/run":
             return self._send(200, run_events(q.get("id", "")))
         if path == "/api/agent":
@@ -310,13 +328,43 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True})
         if path == "/api/reset":
             key = body["member"]
-            TRANSCRIPTS[key].clear(); chats.clear(key)
+            transcript(key).clear(); chats.clear(key)
             return self._send(200, {"ok": True})
         if path == "/api/memory":
             MEMORY.parent.mkdir(exist_ok=True)
             MEMORY.write_text((body.get("text") or "").strip() + "\n", encoding="utf-8")
             core.log_event("You", "edited team memory", "system", key="you")
             return self._send(200, {"ok": True})
+        if path == "/api/org":
+            try:
+                msg = org.set_parent(body.get("key", ""), body.get("reports_to", ""))
+            except ValueError as e:
+                return self._send(400, {"error": str(e)})
+            core.log_event("You", msg, "system", key="you", target=body.get("key"))
+            return self._send(200, {"message": msg, **team_state()})
+        if path == "/api/agents/add":
+            try:
+                key = org.add_agent(body)
+            except ValueError as e:
+                return self._send(400, {"error": str(e)})
+            core.log_event("You", f"added {AGENTS[key].name} to the team", "system", key="you", target=key)
+            return self._send(200, {"key": key, "message": f"Welcome, {AGENTS[key].name}!", **team_state()})
+        if path == "/api/agents/update":
+            try:
+                org.update_agent(body.get("key", ""), body)
+            except ValueError as e:
+                return self._send(400, {"error": str(e)})
+            return self._send(200, {"message": "Saved", **team_state()})
+        if path == "/api/agents/remove":
+            key = body.get("key", "")
+            if any(r["member"] == key for r in ACTIVE.values()):
+                return self._send(409, {"error": "They're busy right now. Stop the request first."})
+            try:
+                msg = org.remove_agent(key)
+            except ValueError as e:
+                return self._send(400, {"error": str(e)})
+            core.log_event("You", msg, "system", key="you")
+            return self._send(200, {"message": msg, **team_state()})
         if path == "/api/health/test":
             return self._send(200, test_connection(body.get("id", "")))
         if path == "/api/chat":

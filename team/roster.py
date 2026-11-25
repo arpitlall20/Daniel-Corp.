@@ -1,4 +1,4 @@
-"""Builds the five-agent team and wires up who reports to whom."""
+"""The built-in agents. Who reports to whom (and any agents you add with +) is handled in org.py."""
 from __future__ import annotations
 
 import os
@@ -37,7 +37,11 @@ people, deletes things or merges code needs {OWNER}'s approval (the tools ask fo
 When {OWNER} tells you a lasting fact or preference, save it with `remember` so the team never has to ask again."""
 
 
-def build_team() -> Agent:
+DEFAULT_PARENTS = {"team_lead": "you", "assistant": "team_lead", "travel": "team_lead", "web": "team_lead",
+                   "senior_dev": "team_lead", "junior_dev": "senior_dev"}
+
+
+def build_builtin() -> dict[str, Agent]:
     junior = Agent(
         key="junior_dev", name="Junior Developer", model=model_for("junior_dev"),
         instructions=COMMON + """
@@ -46,20 +50,21 @@ Always work on a new branch (e.g. junior/<short-name>), run the tests, commit, p
 Never merge. If a task is bigger or unclear, stop and say so instead of guessing.
 Report back: what you changed, the test result, and the PR number.""",
         tools=list(DEV_TOOLS) + MEMORY_TOOLS, extra_context=junior_context,
+        role="small coding tasks: fixes, tests, docs", icon="🌱",
     )
 
     senior = Agent(
         key="senior_dev", name="Senior Developer", model=model_for("senior_dev"),
         instructions=COMMON + """
 Role: senior developer. You plan features, write the hard code and review the junior's work.
-- Give small, self-contained tasks to the junior via `delegate` (member: junior_dev) with clear acceptance criteria.
+- Give small, self-contained coding tasks to your team (if you have one) via `delegate`, with clear acceptance criteria.
 - Review every junior PR with get_pull_request_diff. Comment with feedback. If you spot a mistake
   pattern, save it with add_lesson so the junior learns.
 - Your own work: new branch (senior/<name>), tests, PR.
 - Only call merge_pull_request when the work is reviewed and tests pass; the owner approves the merge.
 Report back: what was done, PR links, any risks.""",
-        tools=list(DEV_TOOLS) + REVIEW_TOOLS + LESSON_TOOLS + MEMORY_TOOLS, team={"junior_dev": junior},
-        extra_context=now_context,
+        tools=list(DEV_TOOLS) + REVIEW_TOOLS + LESSON_TOOLS + MEMORY_TOOLS,
+        extra_context=now_context, role="plans and writes code, reviews pull requests", icon="🧑‍💻",
     )
 
     assistant = Agent(
@@ -69,6 +74,7 @@ Role: projects and calendar assistant. You manage the owner's Apple Calendar, pr
 Check free slots before proposing times. Keep the project list up to date. When asked for a briefing,
 list today's events, upcoming deadlines (next 7 days) and overdue tasks.""",
         tools=CALENDAR_TOOLS + PROJECT_TOOLS + TASK_TOOLS + MEMORY_TOOLS, extra_context=now_context,
+        role="Apple Calendar, free time, projects and deadlines, briefings", icon="📅",
     )
 
     travel = Agent(
@@ -80,6 +86,7 @@ calendar for clashes. Give 2-3 options with prices and links from your web searc
 recent each price is. You NEVER book or pay; you recommend and give booking links.""",
         tools=TRAVEL_MEMORY_TOOLS + MEMORY_TOOLS + [t for t in CALENDAR_TOOLS if t.name in ("list_events", "find_free_slots")],
         server_tools=[WEB_SEARCH], extra_context=now_context,
+        role="trips: flights, hotels, itineraries (never books)", icon="✈️",
     )
 
     web = Agent(
@@ -96,6 +103,7 @@ Role: web and content agent for {OWNER}'s WordPress site. You write and edit blo
 - When editing, wp_get first and send the complete updated content.
 - Report back briefly: what you made or changed, the preview link, and what needs {OWNER}'s approval.""",
         tools=WORDPRESS_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS, server_tools=[WEB_SEARCH], extra_context=now_context,
+        role="WordPress posts and pages, website content", icon="🌐",
     )
 
     lead = Agent(
@@ -110,8 +118,9 @@ How you work:
   what happened from the evidence. Never ask {OWNER} for details you can look up.
 - Fix or retry. If the cause is temporary or a wrong request, delegate a corrected retry. If it needs
   something only {OWNER} can do (a password, a setting, a payment), say exactly what and why, once.
-- Delegate the work: assistant (calendar, projects), travel (trips), web (WordPress posts, pages and
-  website content), senior_dev (code; the senior manages the junior). Coordinate across them (e.g. after a trip is approved, ask the assistant to block the time).
+- Delegate the work to the best-fit member of your team (listed below with their roles). Managers in your
+  team handle their own people. Coordinate across them (e.g. after a trip is approved, ask whoever
+  manages the calendar to block the time).
 - Track multi-step work on the task board; skip it for quick one-off questions.
 
 How you talk to {OWNER}:
@@ -120,17 +129,18 @@ How you talk to {OWNER}:
 - At most ONE question per reply, and only if you truly cannot proceed without it.
 - When something failed: what happened, the cause, what you did or what {OWNER} needs to do. That's it.""",
         tools=TASK_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS + OVERSIGHT_TOOLS,
-        team={"assistant": assistant, "travel": travel, "web": web, "senior_dev": senior},
-        extra_context=now_context, max_turns=30,
+        extra_context=now_context, max_turns=30, role="plans, delegates, checks and reports", icon="🧭",
     )
-    return lead
+    return {a.key: a for a in (lead, assistant, travel, web, senior, junior)}
 
 
-def all_agents(lead: Agent) -> dict[str, Agent]:
-    """Flatten the org chart so you can also talk to any member directly."""
-    out, stack = {}, [lead]
-    while stack:
-        a = stack.pop()
-        out[a.key] = a
-        stack.extend(a.team.values())
-    return out
+def build_team() -> Agent:
+    """The whole team wired up (including agents you added); returns the team lead."""
+    from .org import build_all
+    return build_all()["team_lead"]
+
+
+def all_agents(lead: Agent | None = None) -> dict[str, Agent]:
+    """Every agent by key, including ones that report straight to you."""
+    from .org import build_all, current
+    return current() or build_all()

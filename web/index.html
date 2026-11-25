@@ -134,7 +134,7 @@ textarea:focus { outline: none; border-color: var(--accent); }
 .mic.on { background: var(--danger); border-color: var(--danger); color: #fff; animation: pulse 1s infinite; }
 .mapwrap { flex: 1; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
 .mapbox { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px; }
-.mapbox svg { display: block; width: 100%; height: auto; }
+.mapbox svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; }
 .chips { position: absolute; left: 8px; right: 8px; top: 38px; bottom: 8px; pointer-events: none; }
 .chip { position: absolute; transform: translate(-50%, 0); background: var(--panel); border: 1px solid var(--accent); color: var(--text); box-shadow: var(--shadow); border-radius: 14px; padding: 3px 10px; font-size: 12px; white-space: nowrap; animation: floatup 2.6s ease-out forwards; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
 @keyframes floatup { 0% { opacity: 0; translate: 0 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; translate: 0 -46px; } }
@@ -147,6 +147,7 @@ textarea:focus { outline: none; border-color: var(--accent); }
 .node .halo { fill: var(--warn-soft); opacity: 0; }
 .node.waiting .halo { opacity: 1; animation: pulse 1.2s infinite; }
 .node:hover .ring { stroke-width: 4; }
+.node:focus { outline: none; } .node:focus-visible .ring { stroke: var(--accent); stroke-width: 5; }
 .node text { fill: var(--text); font-family: var(--font); }
 .node .nm { font-size: 15px; font-weight: 600; } .node .dg { font-size: 13px; fill: var(--muted); }
 .node.working .dg, .node.delegating .dg { fill: var(--accent); } .node.waiting .dg { fill: var(--warn); } .node.error .dg { fill: var(--danger); }
@@ -215,7 +216,29 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
 .conn .dot.ok { background: var(--ok); } .conn .dot.bad { background: var(--danger); } .conn .dot.cfg { background: var(--warn); }
 .conn .grow { flex: 1; } .conn .res { font-size: 13px; margin-top: 4px; }
 .faq h5 { margin: 14px 0 4px; font-size: 14px; } .faq p { margin: 0; color: var(--muted); font-size: 14px; }
-.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+.addbtn { width: calc(100% - 16px); margin: 10px 8px 0; border: 1.5px dashed var(--line); background: none; color: var(--accent); padding: 10px; border-radius: 10px; font-weight: 600; }
+.addbtn:hover { border-color: var(--accent); background: var(--accent-soft); }
+.member.dropping { outline: 2px dashed var(--accent); background: var(--accent-soft); }
+.member[draggable="true"] { cursor: grab; }
+.node.droptarget .ring { stroke: var(--ok); stroke-width: 5; }
+.node.droptarget .halo { fill: var(--ok-soft); opacity: 1; }
+.node.nodrop { opacity: .25; }
+.node.dragsrc { opacity: .4; }
+.dragghost { position: absolute; transform: translate(-50%, -50%); pointer-events: none; background: var(--panel); border: 2px solid var(--accent); border-radius: 22px; padding: 6px 12px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow); white-space: nowrap; z-index: 5; }
+.maptools { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.form .fl { font-size: 13px; font-weight: 600; margin: 14px 0 6px; display: block; }
+.form input[type=text] { width: 100%; font: inherit; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+.form textarea { width: 100%; min-height: 110px; }
+.emojis { display: flex; flex-wrap: wrap; gap: 6px; }
+.emojis button { font-size: 18px; padding: 4px 7px; } .emojis button.on { border-color: var(--accent); background: var(--accent-soft); }
+.tpls { display: flex; flex-wrap: wrap; gap: 6px; } .tpls button { border-radius: 16px; font-size: 13px; }
+.abil { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.abil label { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; font-size: 13px; }
+.abil label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.abil input { margin-top: 3px; } .abil small { display: block; color: var(--muted); font-size: 12px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ferr { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
+.toast { bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
 .toast.show { opacity: 1; }
 @media (max-width: 1180px) { main { grid-template-columns: 240px 1fr; } aside.side { display: none; } .hide-s { display: none; } }
 @media (max-width: 760px) { main { grid-template-columns: 1fr; } aside.team { display: none; } .pills { display: none; } #dock { left: 12px; right: 12px; width: auto; } .brand span { display: none; } }
@@ -237,6 +260,8 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
   <aside class="team" aria-label="Your team">
     <div class="label">Your team</div>
     <div id="members"></div>
+    <button class="addbtn" onclick="openAddAgent()">＋ Add team member</button>
+    <div class="muted" style="font-size:12px;margin:6px 10px 0">Tip: drag someone onto another person to change who they report to.</div>
     <div class="bulk"><button onclick="bulk(true)">All on</button><button onclick="bulk(false)">All off</button></div>
     <div class="label" style="margin-top:22px">Shortcuts</div>
     <div class="muted" style="font-size:12px;line-height:2;padding:0 8px">
@@ -271,7 +296,8 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
         <div class="mapbox">
           <div class="legend"><span><i style="border-color:var(--line)"></i>Idle</span><span><i style="border-color:var(--accent)"></i>Working</span>
             <span><i style="border-color:var(--warn)"></i>Needs you</span><span><i style="border-color:var(--danger)"></i>Problem</span>
-            <span style="opacity:.5"><i style="border-color:var(--line)"></i>Switched off</span><span style="margin-left:auto">Click anyone to see their profile</span></div>
+            <span style="opacity:.5"><i style="border-color:var(--line)"></i>Switched off</span>
+            <span class="maptools"><span>Click for profile · drag onto a new manager</span><button class="primary" onclick="openAddAgent()">＋ Add</button></span></div>
           <svg id="map" role="img" aria-label="Live map of your team"></svg>
           <div class="chips" id="chips"></div>
         </div>
@@ -349,7 +375,8 @@ const nowS = () => Date.now() / 1000 + S.offset;
 const dur = s => { s = Math.max(0, Math.round(s)); return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`; };
 const member = k => S.team.find(m => m.key === k);
 const nameOf = k => k === "you" ? "You" : (member(k) || {}).name || k || "";
-const iconOf = k => ICON[k] || nameOf(k).split(/\s+/).map(w => w[0]).join("").slice(0, 2);
+const iconOf = k => (member(k) || {}).icon || ICON[k] || nameOf(k).split(/\s+/).map(w => w[0]).join("").slice(0, 2);
+const roleOf = k => ROLE[k] || (member(k) || {}).role || "";
 function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2400); }
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -384,7 +411,7 @@ function depth(k) { let d = 0, cur = member(k); while (cur && cur.reports_to !==
 function stateText(m) {
   if (!m) return "";
   return { working: doingLabel(m.doing) || "Working…", delegating: m.doing || "Delegating…", waiting: "✋ Needs your approval",
-    error: "⚠️ " + (m.doing || "Problem"), idle: ROLE[m.key] || m.model, off: "Switched off" }[m.state] || "";
+    error: "⚠️ " + (m.doing || "Problem"), idle: roleOf(m.key) || m.model, off: "Switched off" }[m.state] || "";
 }
 function eventView(e) {
   const who = `<b>${esc(e.agent)}</b>`;
@@ -444,15 +471,17 @@ function renderCost() {
 function renderTeam() {
   const h = S.team.map((m, i) => {
     const st = m.state, cls = st === "waiting" ? "wait" : st === "error" ? "err" : ["working", "delegating"].includes(st) ? "live" : "";
+    const dz = `ondragover="dragOver(event,'${m.key}')" ondragleave="this.classList.remove('dropping')" ondrop="dropOn(event,'${m.key}')"`;
     return `<div class="member ind${Math.min(depth(m.key), 2)} ${m.key === S.current && S.view === "chat" ? "active" : ""} ${m.enabled ? "" : "off"}"
-      onclick="pick('${m.key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')pick('${m.key}')" title="Alt+${i + 1}">
+      onclick="pick('${m.key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')pick('${m.key}')" title="Alt+${i + 1}${m.key !== "team_lead" ? " · drag onto someone to change their manager" : ""}"
+      ${m.key !== "team_lead" ? `draggable="true" ondragstart="dragStart(event,'${m.key}')" ondragend="dragEnd()"` : ""} ${dz}>
       <div class="av ${st}">${iconOf(m.key)}</div>${S.unread[m.key] ? `<span class="badge">${S.unread[m.key]}</span>` : ""}
       <div class="who"><div class="n">${esc(m.name)}</div><div class="m ${cls}">${esc(stateText(m))}</div></div>
       <label class="switch" onclick="event.stopPropagation()" title="${m.enabled ? "Switch off" : "Switch on"}">
         <input type="checkbox" ${m.enabled ? "checked" : ""} aria-label="${esc(m.name)} on or off" onchange="toggle('${m.key}', this.checked)"><span></span></label></div>`;
   }).join("");
   const busyInput = $("members").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
-  if (h !== renderTeam.last && !busyInput) { $("members").innerHTML = h; renderTeam.last = h; }
+  if (h !== renderTeam.last && !busyInput && !S.dragging) { $("members").innerHTML = h; renderTeam.last = h; }
 }
 async function toggle(key, on) { try { const d = await api("/api/toggle", { key, enabled: on }); S.team = d.members; renderTeam(); renderPills(); toast(d.message); } catch (e) { toast(e.message); } }
 const bulk = on => toggle("all", on);
@@ -462,7 +491,7 @@ function renderChatHead() {
   $("chatName").textContent = m.name;
   const tag = $("chatState"); tag.className = "state-tag " + m.state;
   tag.textContent = { working: "Working", delegating: "Delegating", waiting: "Needs you", error: "Problem", idle: "Idle", off: "Off" }[m.state] || m.state;
-  $("chatSub").textContent = `${m.state === "idle" ? (ROLE[m.key] || "") : stateText(m)} · ${m.model} · ${money(m.cost)} this session`;
+  $("chatSub").textContent = `${m.state === "idle" ? roleOf(m.key) : stateText(m)} · ${m.model} · ${money(m.cost)} this session`;
   $("input").placeholder = m.enabled ? `Message ${m.name}…` : `${m.name} is switched off. Turn it on to chat.`;
 }
 
@@ -478,8 +507,8 @@ function renderMessages() {
   if (!list.length && !run) {
     const m = member(S.current) || {};
     box.innerHTML = `<div class="empty"><div class="emo">${iconOf(S.current)}</div><div class="big">Chat with your ${esc(m.name || "")}</div>
-      ${esc(ROLE[S.current] || "")}${earlier.length ? `<div class="remembers">✓ Remembers your earlier conversation</div>` : ""}
-      <div class="suggest">${(SUGGEST[S.current] || []).map(s => `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div>
+      ${esc(roleOf(S.current))}${earlier.length ? `<div class="remembers">✓ Remembers your earlier conversation</div>` : ""}
+      <div class="suggest">${(SUGGEST[S.current] || ["What can you help me with?", "Introduce yourself"]).map(s => `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div>
       ${more ? `<div style="margin-top:16px">${more}</div>` : ""}</div><div id="runSlot"></div>`;
     return;
   }
@@ -627,22 +656,24 @@ function buildMap() {
     const sy = p.y + 86, my2 = (sy + c.y - 36) / 2;
     h += `<path class="edge" id="e-${n.key}" d="M ${p.x} ${sy} C ${p.x} ${my2}, ${c.x} ${my2}, ${c.x} ${c.y - 36}"/>`; }
   for (const n of nodes) { const p = pos[n.key], isYou = n.key === "you";
-    h += `<g class="node" id="n-${n.key}" transform="translate(${p.x},${p.y})" onclick="${isYou ? "pick('team_lead')" : `openProfile('${n.key}')`}" tabindex="0" role="button" aria-label="${esc(nameOf(n.key))}">
+    h += `<g class="node" id="n-${n.key}" data-key="${n.key}" transform="translate(${p.x},${p.y})" tabindex="0" role="button" aria-label="${esc(nameOf(n.key))}"
+      onkeydown="if(event.key==='Enter'){${isYou ? "pick('team_lead')" : `openProfile('${n.key}')`}}">
       <circle class="halo" r="44"/><circle class="ring" r="32"/><circle class="spinner" r="38"/>
       <text text-anchor="middle" dominant-baseline="central" font-size="26">${iconOf(n.key)}</text>
-      <text class="nm" text-anchor="middle" y="56">${esc(isYou ? "You" : nameOf(n.key))}</text>
+      <text class="nm" text-anchor="middle" y="56">${esc(isYou ? "You" : (nameOf(n.key).length > 26 ? nameOf(n.key).slice(0, 25) + "…" : nameOf(n.key)))}</text>
       <text class="dg" text-anchor="middle" y="75" id="dg-${n.key}"></text></g>`; }
   svg.innerHTML = h + `<g id="dots"></g>`;
 }
 function updateMap() {
   for (const m of S.team) {
     const g = $("n-" + m.key); if (!g) continue;
-    g.setAttribute("class", `node ${m.state}`);
+    const keep = [...g.classList].filter(c => ["droptarget", "nodrop", "dragsrc"].includes(c));
+    g.setAttribute("class", ["node", m.state, ...keep].join(" "));
     const t = stateText(m); const dg = $("dg-" + m.key); if (dg) dg.textContent = t.length > 34 ? t.slice(0, 33) + "…" : t;
     const e = $("e-" + m.key); const boss = member(m.reports_to);
     if (e) e.setAttribute("class", "edge" + (boss && boss.state === "delegating" && ["working", "delegating", "waiting"].includes(m.state) ? " hot" : ""));
   }
-  const you = $("n-you"); if (you) { you.setAttribute("class", "node" + (S.approvals.length ? " waiting" : ""));
+  const you = $("n-you"); if (you) { you.setAttribute("class", "node" + (S.approvals.length ? " waiting" : "") + (you.classList.contains("droptarget") ? " droptarget" : ""));
     $("dg-you").textContent = S.approvals.length ? `✋ ${S.approvals.length} approval${S.approvals.length > 1 ? "s" : ""} waiting` : (S.active.length ? "" : "Click to talk to the lead"); }
 }
 function travel(from, to, color) {
@@ -754,12 +785,15 @@ async function openProfile(key) {
   const m = member(key) || {};
   const tools = p.tools.filter(t => t.name !== "delegate");
   $("drawer").innerHTML = `<div class="dhead"><div class="av ${m.state}">${iconOf(key)}</div>
-      <div style="flex:1"><div style="font-weight:600;font-size:17px">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(ROLE[key] || "")}</div></div>
+      <div style="flex:1"><div style="font-weight:600;font-size:17px">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(roleOf(key))}</div></div>
+      ${p.custom ? `<button onclick="openAddAgent('${key}')">✏️ Edit</button>` : ""}
       <button class="ghost hbtn" onclick="closeAll()" aria-label="Close">✕</button></div>
     <div class="dbody">
       <div class="dsec"><div class="row"><span>Right now</span><span class="state-tag ${m.state}">${esc(m.state === "idle" ? "Idle, ready for work" : stateText(m))}</span></div>
         <div class="row"><span>Switched on</span><label class="switch"><input type="checkbox" ${m.enabled ? "checked" : ""} onchange="toggle('${key}', this.checked)"><span></span></label></div>
-        <div class="row"><span>Reports to</span><span>${iconOf(p.reports_to)} ${esc(nameOf(p.reports_to))}</span></div>
+        ${key === "team_lead" ? `<div class="row"><span>Reports to</span><span>👤 You</span></div>`
+          : `<div class="row"><span>Reports to</span><select style="width:auto;max-width:230px" onchange="setParent('${key}', this.value)" aria-label="Reports to">
+              ${p.can_report_to.map(k => `<option value="${k}" ${k === p.reports_to ? "selected" : ""}>${k === "you" ? "👤 You (directly)" : iconOf(k) + " " + esc(nameOf(k))}</option>`).join("")}</select></div>`}
         ${p.manages.length ? `<div class="row"><span>Manages</span><span>${p.manages.map(esc).join(", ")}</span></div>` : ""}</div>
       <div class="dsec"><h4>Brain (model)</h4>
         <select onchange="setModel('${key}', this.value)" aria-label="Model">${p.models.map(x => `<option value="${x}" ${x === p.model ? "selected" : ""}>${x}  ($${p.prices[x][0]} in / $${p.prices[x][1]} out per M tokens)</option>`).join("")}</select>
@@ -772,6 +806,7 @@ async function openProfile(key) {
       <div class="dsec"><h4>Recent work</h4>${p.recent.length ? p.recent.map(e => { const v = eventView(e);
           return `<div class="ev ${v.cls}"><span class="ic">${v.ic}</span><span class="tx">${v.text}</span><span class="tm">${e.time}</span></div>`; }).join("") : `<div class="muted" style="font-size:13px">Nothing yet this session.</div>`}</div>
       <button class="primary" style="width:100%;padding:10px" onclick="closeAll(); pick('${key}')">💬 Chat with ${esc(p.name)}</button>
+      ${p.custom ? `<button class="danger" style="width:100%;padding:10px;margin-top:8px" onclick="removeAgent('${key}')">Remove ${esc(p.name)} from the team</button>` : ""}
     </div>`;
   $("drawer").classList.add("show"); $("scrim").classList.add("show");
 }
@@ -805,7 +840,7 @@ function openHelp() {
     senior_dev: "Plans and writes code on GitHub, reviews the junior's work, and opens pull requests for you to approve.",
     junior_dev: "Handles small coding tasks and learns from the senior's feedback over time." };
   modal("❔ What can my team do?", `<div class="faq">
-    ${S.team.map(m => `<h5>${iconOf(m.key)} ${esc(m.name)}</h5><p>${esc(desc[m.key] || ROLE[m.key] || "")}</p>`).join("")}
+    ${S.team.map(m => `<h5>${iconOf(m.key)} ${esc(m.name)}</h5><p>${esc(desc[m.key] || (m.custom ? "Added by you: " : "") + roleOf(m.key))}</p>`).join("")}
     <h5>🛡️ Is it safe?</h5><p>Anything that spends money, changes something live, deletes, or affects other people waits for your Approve. Unanswered requests are declined after 10 minutes. You can Stop any request mid-way.</p>
     <h5>🧠 Does it remember me?</h5><p>Yes. Each chat is saved, and lasting facts go into Team memory (right panel) that every agent reads. You can edit or erase it anytime.</p>
     <h5>👀 Can I see what they're doing?</h5><p>Live, step by step: the team map, the progress card in chat, “Show steps” under every reply, and the Activity feed.</p>
@@ -815,6 +850,113 @@ function openHelp() {
     <h5>⏰ Does it work when the panel is closed?</h5><p>Agents work while web.py (the black window) is running. Closing the browser tab is fine; closing the black window stops them.</p>
     <h5>➕ Can I add more agents?</h5><p>Yes. New agents appear here automatically with their own switch, profile and spot on the map.</p>
     <h5>⌨️ Shortcuts</h5><p>Alt+1–7 switch agent · Alt+M map · Alt+C chat · / focus the message box · ? this help · Esc close.</p></div>`);
+}
+
+
+/* ---------- building the team: add, edit, remove, re-org ---------- */
+const EMOJIS = ["🙂", "🔬", "📣", "✉️", "💰", "🎧", "📊", "🎨", "🧠", "🛒", "📚", "⚖️", "🏋️", "🍳", "🎯", "🤝"];
+const TEMPLATES = [
+  { label: "🔬 Researcher", name: "Researcher", icon: "🔬", role: "deep research with sources", abilities: ["web_search", "tasks"],
+    instructions: "Research any topic I give you thoroughly. Search several sources, compare them, and give me a short summary first, then the details. Always include links to your sources and say how recent they are. Flag anything you're unsure about." },
+  { label: "📣 Social media", name: "Social Media Manager", icon: "📣", role: "drafts posts for LinkedIn, Instagram and X", abilities: ["web_search"],
+    instructions: "Write social media posts for Daniel Corp in my voice (see team memory). Give 2-3 versions per request, tailored to each platform, with suggested hashtags and an image idea. Keep them short and punchy. You never post anything yourself; I copy and post them." },
+  { label: "✉️ Email writer", name: "Email Writer", icon: "✉️", role: "drafts emails and replies", abilities: [],
+    instructions: "Draft emails and replies for me. Ask me nothing you can reasonably assume; give a subject line and the email. Match the tone to the situation: friendly for clients, firm but polite for follow-ups. You never send emails; I send them." },
+  { label: "💰 Finance tracker", name: "Finance Tracker", icon: "💰", role: "budgets, expenses and invoices", abilities: ["tasks"],
+    instructions: "Help me track my budget, expenses and invoices. Keep running notes on the task board, double-check every calculation, and remind me of payment due dates. Never move money or pay anything." },
+  { label: "🎧 Customer support", name: "Support Agent", icon: "🎧", role: "drafts replies to customers", abilities: ["web_search"],
+    instructions: "Draft clear, kind replies to customer questions and complaints I paste in. Acknowledge the problem, give a solution or next step, and keep it short. Flag anything that needs a refund or a decision from me." },
+  { label: "✨ Blank", name: "", icon: "🙂", role: "", abilities: ["web_search"], instructions: "" },
+];
+let CATALOG = null;
+async function openAddAgent(editKey) {
+  try { CATALOG ||= await api("/api/abilities"); } catch (e) { return toast(e.message); }
+  let spec = { name: "", icon: "🙂", role: "", instructions: "", model: "claude-sonnet-5-5", abilities: ["web_search"], reports_to: "team_lead" };
+  if (editKey) { try { const p = await api("/api/agent?key=" + editKey); spec = { ...spec, ...(p.spec || {}), reports_to: p.reports_to }; } catch (e) { return toast(e.message); } }
+  const bosses = [{ key: "you", name: "You (directly)", icon: "👤" }, ...S.team.filter(m => m.key !== editKey && !(editKey && teamOf(editKey).has(m.key)))
+    .map(m => ({ key: m.key, name: m.name, icon: iconOf(m.key) }))];
+  modal(editKey ? `✏️ Edit ${esc(spec.name)}` : "＋ Add a team member", `<div class="form">
+    ${editKey ? "" : `<span class="fl" style="margin-top:0">Start from a template</span><div class="tpls">${TEMPLATES.map((t, i) => `<button type="button" onclick="applyTemplate(${i})">${t.label}</button>`).join("")}</div>`}
+    <span class="fl">Name</span><input type="text" id="fName" maxlength="40" placeholder="e.g. Social Media Manager" value="${esc(spec.name)}">
+    <span class="fl">Look</span><div class="emojis" id="fEmojis">${EMOJIS.map(e => `<button type="button" class="${e === spec.icon ? "on" : ""}" onclick="pickEmoji('${e}')">${e}</button>`).join("")}
+      <input type="text" id="fIcon" maxlength="4" value="${esc(spec.icon)}" style="width:64px;text-align:center" aria-label="Or type any emoji"></div>
+    <span class="fl">Job in one line</span><input type="text" id="fRole" maxlength="80" placeholder="e.g. drafts posts for LinkedIn and Instagram" value="${esc(spec.role)}">
+    <span class="fl">What should they do? (in your own words)</span>
+    <textarea id="fInstr" placeholder="Describe the job like you'd brief a new hire: what they handle, how you like it done, and what they must never do.">${esc(spec.instructions)}</textarea>
+    <div class="two"><div><span class="fl">Reports to</span><select id="fBoss">${bosses.map(b => `<option value="${b.key}" ${b.key === spec.reports_to ? "selected" : ""}>${b.icon} ${esc(b.name)}</option>`).join("")}</select></div>
+      <div><span class="fl">Brain</span><select id="fModel">${CATALOG.models.map(m => `<option value="${m}" ${m === spec.model ? "selected" : ""}>${m}${m.includes("haiku") ? " (cheapest)" : m.includes("opus") ? " (smartest)" : " (balanced)"}</option>`).join("")}</select></div></div>
+    <span class="fl">Abilities <span class="muted" style="font-weight:400">(team memory is always included)</span></span>
+    <div class="abil">${CATALOG.abilities.map(a => `<label><input type="checkbox" value="${a.id}" ${spec.abilities.includes(a.id) ? "checked" : ""}>
+      <span>${a.icon} ${esc(a.label)}<small>${esc(a.desc)}</small></span></label>`).join("")}</div>
+    <div class="ferr" id="fErr"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button type="button" onclick="closeAll()">Cancel</button>
+      <button type="button" class="primary" onclick="saveAgent(${editKey ? `'${editKey}'` : "null"})">${editKey ? "Save changes" : "＋ Add to team"}</button></div></div>`);
+  setTimeout(() => $("fName").focus(), 50);
+}
+function pickEmoji(e) { $("fIcon").value = e; document.querySelectorAll("#fEmojis button").forEach(b => b.classList.toggle("on", b.textContent === e)); }
+function applyTemplate(i) {
+  const t = TEMPLATES[i]; $("fName").value = t.name; $("fRole").value = t.role; $("fInstr").value = t.instructions; pickEmoji(t.icon);
+  document.querySelectorAll(".abil input").forEach(c => c.checked = t.abilities.includes(c.value)); $("fName").focus();
+}
+async function saveAgent(editKey) {
+  const body = { key: editKey, name: $("fName").value.trim(), icon: $("fIcon").value.trim(), role: $("fRole").value.trim(),
+    instructions: $("fInstr").value.trim(), reports_to: $("fBoss").value, model: $("fModel").value,
+    abilities: [...document.querySelectorAll(".abil input:checked")].map(c => c.value) };
+  if (!body.name) { $("fErr").textContent = "Give your new team member a name."; $("fName").focus(); return; }
+  if (!body.instructions && !body.role) { $("fErr").textContent = "Describe their job, in one line or in the box, so they know what to do."; $("fRole").focus(); return; }
+  try {
+    const d = await api(editKey ? "/api/agents/update" : "/api/agents/add", body);
+    S.team = d.members; closeAll(); renderTeam(); toast(d.message);
+    if (S.view === "map") { buildMap(); updateMap(); if (d.key) chip(d.key, "👋 Just joined the team"); } else if (d.key) pick(d.key);
+  } catch (e) { $("fErr").textContent = e.message; }
+}
+async function removeAgent(key) {
+  if (!confirm(`Remove ${nameOf(key)} from the team? Anyone they manage moves up to their manager.`)) return;
+  try { const d = await api("/api/agents/remove", { key }); S.team = d.members; closeAll(); toast(d.message);
+    if (S.current === key) pick("team_lead"); renderTeam(); if (S.view === "map") { buildMap(); updateMap(); } } catch (e) { toast(e.message); }
+}
+function teamOf(key) {
+  const found = new Set(); let frontier = new Set([key]);
+  while (frontier.size) { const nxt = new Set(S.team.filter(m => frontier.has(m.reports_to) && !found.has(m.key)).map(m => m.key)); nxt.forEach(k => found.add(k)); frontier = nxt; }
+  return found;
+}
+async function setParent(key, boss) {
+  if (key === boss) return;
+  try { const d = await api("/api/org", { key, reports_to: boss }); S.team = d.members; renderTeam.last = ""; renderTeam(); toast("🤝 " + d.message);
+    if (S.view === "map") { buildMap(); updateMap(); chip(key, `🤝 Now reports to ${esc(nameOf(boss))}`); }
+    if ($("drawer").classList.contains("show")) openProfile(key); } catch (e) { toast(e.message); if (S.view === "map") { buildMap(); updateMap(); } }
+}
+/* drag in the team list */
+function dragStart(ev, key) { S.dragging = key; ev.dataTransfer.setData("text/plain", key); ev.dataTransfer.effectAllowed = "move"; }
+function dragEnd() { S.dragging = null; document.querySelectorAll(".member.dropping").forEach(x => x.classList.remove("dropping")); }
+function dragOver(ev, key) { const k = S.dragging; if (!k || k === key || teamOf(k).has(key)) return; ev.preventDefault(); ev.currentTarget.classList.add("dropping"); }
+function dropOn(ev, key) { ev.preventDefault(); const k = ev.dataTransfer.getData("text/plain") || S.dragging; dragEnd(); if (k && k !== key) setParent(k, key); }
+/* drag on the live map */
+function initMapDrag() {
+  const svg = $("map"); let drag = null;
+  svg.addEventListener("pointerdown", ev => { const g = ev.target.closest(".node"); if (!g || ev.button !== 0) return;
+    drag = { key: g.dataset.key, x: ev.clientX, y: ev.clientY, moving: false, target: null }; svg.setPointerCapture(ev.pointerId); });
+  svg.addEventListener("pointermove", ev => {
+    if (!drag) return;
+    if (!drag.moving) { if (Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 6 || ["you", "team_lead"].includes(drag.key)) return;
+      drag.moving = true; S.dragging = drag.key; drag.blocked = new Set([drag.key, ...teamOf(drag.key)]);
+      for (const k of drag.blocked) $("n-" + k)?.classList.add(k === drag.key ? "dragsrc" : "nodrop");
+      drag.ghost = document.createElement("div"); drag.ghost.className = "dragghost"; drag.ghost.textContent = `${iconOf(drag.key)} ${nameOf(drag.key)}`; $("chips").appendChild(drag.ghost); }
+    const r = $("chips").getBoundingClientRect(); drag.ghost.style.left = (ev.clientX - r.left) + "px"; drag.ghost.style.top = (ev.clientY - r.top) + "px";
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    let best = null, bd = 70;
+    for (const [k, q] of Object.entries(MAP.pos)) { if (drag.blocked.has(k)) continue; const d = Math.hypot(q.x - p.x, q.y - p.y); if (d < bd) { bd = d; best = k; } }
+    if (best !== drag.target) { if (drag.target) $("n-" + drag.target)?.classList.remove("droptarget"); drag.target = best; if (best) $("n-" + best)?.classList.add("droptarget");
+      drag.ghost.textContent = `${iconOf(drag.key)} ${nameOf(drag.key)}${best ? ` → ${best === "you" ? "reports to you" : nameOf(best)}` : ""}`; }
+  });
+  const finish = commit => { const d = drag; drag = null; S.dragging = null; if (!d) return;
+    if (!d.moving) { if (commit) d.key === "you" ? pick("team_lead") : openProfile(d.key); return; }
+    d.ghost?.remove(); document.querySelectorAll(".node.nodrop,.node.dragsrc,.node.droptarget").forEach(n => n.classList.remove("nodrop", "dragsrc", "droptarget"));
+    if (commit && d.target && member(d.key)?.reports_to !== d.target) setParent(d.key, d.target);
+    else if (commit && !d.target) toast("Drop them onto a person to change who they report to"); };
+  svg.addEventListener("pointerup", () => finish(true));
+  svg.addEventListener("pointercancel", () => finish(false));
 }
 
 /* input + keyboard */
@@ -837,6 +979,7 @@ window.addEventListener("resize", () => { if (S.view === "map") { buildMap(); up
   S.notify = store.get("notify", false) && "Notification" in window && Notification.permission === "granted";
   $("notifBtn").textContent = S.notify ? "🔔" : "🔕";
   if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) $("micBtn").hidden = true;
+  initMapDrag();
   await poll(); await loadTranscript(); renderActivity(); refreshTasks();
   setInterval(poll, 700);
   setInterval(() => { renderDock(); if (S.view === "map") renderNow(); }, 1000);

@@ -56,3 +56,16 @@ def set_model(key: str, model: str) -> None:
 
 def model_for(key: str) -> str:
     return load()["agents"][key]["model"]
+
+
+def ensure_agent(key: str, model: str, enabled: bool = True) -> None:
+    cfg = load()
+    cfg["agents"].setdefault(key, {"enabled": enabled, "model": model})
+    save(cfg)
+
+
+def remove_agent(key: str) -> None:
+    cfg = load()
+    if key in cfg["agents"] and key not in DEFAULT["agents"]:
+        del cfg["agents"][key]
+        save(cfg)

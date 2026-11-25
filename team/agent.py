@@ -131,16 +131,32 @@ class Agent:
     team: dict[str, "Agent"] = field(default_factory=dict)  # agents this one can delegate to
     extra_context: callable = None                           # returns text appended to instructions
     max_turns: int = 25
+    role: str = ""                                           # one-line job description
+    icon: str = ""                                           # emoji shown in the panel
+    custom: bool = False                                     # made in the panel with the + button
 
     def __post_init__(self):
+        self.set_team(self.team)
+
+    def set_team(self, team: dict[str, "Agent"]) -> None:
+        """(Re)wire who this agent can delegate to. Called whenever you change the org chart."""
+        self.team = dict(team)
+        self.tools = [t for t in self.tools if t.name != "delegate"]
         if self.team:
             self.tools.append(Tool(
                 "delegate",
-                "Hand a task to a team member and get their report back. Team members: "
+                "Hand a task to someone in your team and get their report back. Your team: "
                 + ", ".join(f"{k} ({a.name})" for k, a in self.team.items()),
                 schema({"member": {"type": "string", "enum": list(self.team)}, "task": S}, ["member", "task"]),
                 self._delegate,
             ))
+
+    def team_brief(self) -> str:
+        if not self.team:
+            return ""
+        lines = [f"- {k}: {a.name}, {a.role or 'team member'}" + ("" if is_enabled(k) else " (switched OFF)")
+                 for k, a in self.team.items()]
+        return "\n\nYour team (hand work over with `delegate`; pick the best fit for each part):\n" + "\n".join(lines)
 
     def _delegate(self, member: str, task: str) -> str:
         if member not in self.team:
@@ -187,7 +203,8 @@ class Agent:
             _ctx.stack.pop()
 
     def _loop(self, task: str, history: list | None) -> str:
-        system = self.instructions + (("\n\n" + self.extra_context()) if self.extra_context else "")
+        system = (self.instructions + (("\n\n" + self.extra_context()) if self.extra_context else "")
+                  + self.team_brief())
         system_blocks = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
         tool_specs = [t.spec() for t in self.tools] + self.server_tools
         tools_by_name = {t.name: t for t in self.tools}
