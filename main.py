@@ -1,6 +1,7 @@
 """Talk to your AI team.
 
   python main.py                      # chat with the team lead
+  python main.py chat assistant       # chat with one member (assistant, travel, senior_dev, junior_dev)
   python main.py ask "plan my week"   # one request to the team lead
   python main.py ask "..." --to travel  # talk to one member directly
   python main.py status               # who is on / off
@@ -44,23 +45,35 @@ def main(argv: list[str]) -> None:
         print(agents[target].run(argv[1]))
         print("\n" + cost_report()); return
 
-    # interactive chat with the team lead (keeps conversation history)
-    lead, history = agents["team_lead"], []
-    print(status() + "\nChat with your Team Lead. Type 'status', 'on X', 'off X', or 'quit'.\n")
+    # interactive chat; each member keeps their own conversation history
+    current = argv[1] if cmd == "chat" and len(argv) > 1 else ("team_lead" if cmd == "chat" else cmd)
+    if current not in agents:
+        print(f"Unknown member '{current}'. Choose: {', '.join(agents)}"); return
+    histories: dict[str, list] = {k: [] for k in agents}
+    print(status() + f"\nChatting with: {agents[current].name}"
+          "\nCommands: 'switch <member>', 'status', 'on X', 'off X', 'quit'.\n")
     while True:
         try:
-            msg = input("you> ").strip()
+            msg = input(f"you -> {current}> ").strip()
         except (EOFError, KeyboardInterrupt):
             break
         if not msg:
             continue
+        words = msg.split()
         if msg in ("quit", "exit"):
             break
         if msg == "status":
             print(status()); continue
-        if msg.split()[0] in ("on", "off") and len(msg.split()) == 2:
-            print(set_enabled(msg.split()[1], msg.split()[0] == "on")); continue
-        print("\nlead> " + lead.run(msg, history) + "\n")
+        if words[0] in ("on", "off") and len(words) == 2:
+            print(set_enabled(words[1], words[0] == "on")); continue
+        if words[0] == "switch" and len(words) == 2:
+            if words[1] in agents:
+                current = words[1]
+                print(f"Now chatting with: {agents[current].name}\n")
+            else:
+                print(f"Unknown member. Choose: {', '.join(agents)}")
+            continue
+        print(f"\n{agents[current].name}> " + agents[current].run(msg, histories[current]) + "\n")
     print(cost_report())
 
 

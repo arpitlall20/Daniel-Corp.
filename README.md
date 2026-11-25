@@ -42,6 +42,7 @@ python main.py
 
 ```bash
 python main.py                                   # chat with the Team Lead
+python main.py chat assistant                    # chat with your assistant (or travel, senior_dev, junior_dev)
 python main.py ask "What's on this week?"        # one-off request
 python main.py ask "Find flights BNE-SYD 3 Mar" --to travel   # talk to one agent directly
 python main.py status                            # who's on/off
@@ -50,7 +51,8 @@ python main.py on all                            # switch everyone on
 python main.py tasks                             # show the shared task board
 ```
 
-Inside chat you can also type `status`, `on travel`, `off senior_dev`, `quit`.
+Inside chat you can also type `switch travel` (talk to someone else), `status`, `on travel`, `off senior_dev`, `quit`.
+Each member remembers your conversation with them until you quit.
 
 ## Safety rules built in
 
