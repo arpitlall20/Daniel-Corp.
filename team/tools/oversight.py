@@ -7,7 +7,7 @@ from .. import chats
 from ..agent import ACTIVITY_LOG
 from .base import I, S, Tool, schema
 
-NAMES = {"assistant": "calendar", "travel": "travel", "senior_dev": "senior", "junior_dev": "junior",
+NAMES = {"assistant": "calendar", "travel": "travel", "web": "web & content", "senior_dev": "senior", "junior_dev": "junior",
          "team_lead": "team lead"}
 
 
@@ -38,7 +38,7 @@ def read_member_chat(member: str, last_n: int = 10) -> str:
     return "\n\n".join(f"{'OWNER' if m['role'] == 'you' else member.upper()}: {m['text'][:1500]}" for m in transcript)
 
 
-MEMBER = {"type": "string", "description": "assistant, travel, senior_dev or junior_dev"}
+MEMBER = {"type": "string", "description": "assistant, travel, web, senior_dev or junior_dev"}
 
 OVERSIGHT_TOOLS = [
     Tool("read_team_activity",

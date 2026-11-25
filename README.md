@@ -7,6 +7,7 @@ You
 └── Team Lead (Sonnet)            plans, delegates, reports back to you
     ├── Projects & Calendar (Haiku)  Apple Calendar, projects, deadlines
     ├── Travel Agent (Haiku)          flights, hotels, itineraries (never books on its own)
+    ├── Web & Content (Sonnet)        WordPress posts and pages (drafts; you approve publishing)
     └── Senior Developer (Sonnet)     designs, codes, reviews PRs on GitHub
         └── Junior Developer (Haiku)  small tasks; learns from data/lessons.md
 ```
@@ -66,6 +67,15 @@ python main.py tasks                             # show the shared task board
 
 Inside chat you can also type `switch travel` (talk to someone else), `status`, `on travel`, `off senior_dev`, `quit`.
 Each member remembers your conversation with them until you quit.
+
+## WordPress (Web & Content agent)
+
+1. In WordPress: **Users → Profile → Application Passwords**, name it `Daniel Corp`, click Add, copy the password.
+2. Add `WP_URL`, `WP_USERNAME` (your login name) and `WP_APP_PASSWORD` to `.env`.
+3. Test: `python check_wordpress.py`
+
+It writes drafts freely; publishing, scheduling, or changing anything already live asks for your approval.
+It has no delete tool. Works with self-hosted WordPress and WordPress.com plans that support plugins.
 
 ## Spending
 

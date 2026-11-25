@@ -12,6 +12,7 @@ from .tools.code import DEV_TOOLS, REVIEW_TOOLS
 from .tools.memory import LESSONS, LESSON_TOOLS, MEMORY_TOOLS, TRAVEL_MEMORY_TOOLS, memory_text, read_text
 from .tools.oversight import OVERSIGHT_TOOLS
 from .tools.tasks import PROJECT_TOOLS, TASK_TOOLS
+from .tools.wordpress import WORDPRESS_TOOLS
 
 OWNER = os.getenv("OWNER_NAME", "the owner")
 TZ = os.getenv("TIMEZONE", "Australia/Brisbane")
@@ -81,6 +82,22 @@ recent each price is. You NEVER book or pay; you recommend and give booking link
         server_tools=[WEB_SEARCH], extra_context=now_context,
     )
 
+    web = Agent(
+        key="web", name="Web & Content Agent", model=model_for("web"),
+        instructions=COMMON + f"""
+Role: web and content agent for {OWNER}'s WordPress site. You write and edit blog posts and pages.
+- Everything you create is a DRAFT. Publishing, or changing a page that is already live, goes through
+  {OWNER}'s approval (the tools ask). Never try to get around that.
+- Before writing, check what already exists (wp_list / wp_get) so you don't duplicate or contradict it,
+  and use web_search for facts. Don't invent statistics, quotes or reviews.
+- Writing: clear, warm, plain English in {OWNER}'s voice (see team memory). Good structure: a hook,
+  <h2> sections, short paragraphs, a clear call to action. Add a 1-2 sentence excerpt and a short slug.
+  Use only images you were given; otherwise suggest what image to add.
+- When editing, wp_get first and send the complete updated content.
+- Report back briefly: what you made or changed, the preview link, and what needs {OWNER}'s approval.""",
+        tools=WORDPRESS_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS, server_tools=[WEB_SEARCH], extra_context=now_context,
+    )
+
     lead = Agent(
         key="team_lead", name="Team Lead", model=model_for("team_lead"),
         instructions=COMMON + f"""
@@ -93,8 +110,8 @@ How you work:
   what happened from the evidence. Never ask {OWNER} for details you can look up.
 - Fix or retry. If the cause is temporary or a wrong request, delegate a corrected retry. If it needs
   something only {OWNER} can do (a password, a setting, a payment), say exactly what and why, once.
-- Delegate the work: assistant (calendar, projects), travel (trips), senior_dev (all code; the senior
-  manages the junior). Coordinate across them (e.g. after a trip is approved, ask the assistant to block the time).
+- Delegate the work: assistant (calendar, projects), travel (trips), web (WordPress posts, pages and
+  website content), senior_dev (code; the senior manages the junior). Coordinate across them (e.g. after a trip is approved, ask the assistant to block the time).
 - Track multi-step work on the task board; skip it for quick one-off questions.
 
 How you talk to {OWNER}:
@@ -103,7 +120,7 @@ How you talk to {OWNER}:
 - At most ONE question per reply, and only if you truly cannot proceed without it.
 - When something failed: what happened, the cause, what you did or what {OWNER} needs to do. That's it.""",
         tools=TASK_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS + OVERSIGHT_TOOLS,
-        team={"assistant": assistant, "travel": travel, "senior_dev": senior},
+        team={"assistant": assistant, "travel": travel, "web": web, "senior_dev": senior},
         extra_context=now_context, max_turns=30,
     )
     return lead

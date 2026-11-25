@@ -183,11 +183,12 @@
 <script>
 const $ = id => document.getElementById(id);
 const ROLE = { team_lead: "Plans, delegates, reports", assistant: "Calendar & projects",
-  travel: "Flights, hotels, itineraries", senior_dev: "Designs, codes, reviews", junior_dev: "Small tasks, learning" };
+  travel: "Flights, hotels, itineraries", web: "WordPress posts & pages", senior_dev: "Designs, codes, reviews", junior_dev: "Small tasks, learning" };
 const SUGGEST = {
   team_lead: ["What's on my plate this week?", "Plan a Sydney trip next month and block the time"],
   assistant: ["What's on my calendar this week?", "Add a project called Daniel Corp, due 31 December"],
   travel: ["Plan a weekend on the Gold Coast, budget $800", "Cheapest flights BNE to Melbourne next Friday"],
+  web: ["Draft a blog post introducing Daniel Corp", "List my latest posts and suggest improvements"],
   senior_dev: ["Review the open pull requests", "Plan the structure for a new feature"],
   junior_dev: ["Add tests for the login function", "Fix typos in the README"],
 };

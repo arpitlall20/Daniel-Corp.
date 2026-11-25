@@ -9,6 +9,7 @@ DEFAULT = {
         "team_lead":  {"enabled": True, "model": "claude-sonnet-5-5"},
         "assistant":  {"enabled": True, "model": "claude-haiku-5-5"},
         "travel":     {"enabled": True, "model": "claude-haiku-5-5"},
+        "web":        {"enabled": True, "model": "claude-sonnet-5-5"},
         "senior_dev": {"enabled": True, "model": "claude-sonnet-5-5"},
         "junior_dev": {"enabled": True, "model": "claude-haiku-5-5"},
     }
@@ -18,7 +19,12 @@ DEFAULT = {
 def load() -> dict:
     if not CONFIG_PATH.exists():
         save(DEFAULT)
-    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    missing = {k: v for k, v in DEFAULT["agents"].items() if k not in cfg.setdefault("agents", {})}
+    if missing:  # new agents added in an update appear automatically, keeping your existing switches
+        cfg["agents"].update(missing)
+        save(cfg)
+    return cfg
 
 
 def save(cfg: dict) -> None:

@@ -35,7 +35,7 @@ HOST, PORT = "127.0.0.1", int(os.getenv("PORT", "8000"))
 PAGE = Path(__file__).parent / "web" / "index.html"
 
 AGENTS = all_agents(build_team())
-ORDER = ["team_lead", "assistant", "travel", "senior_dev", "junior_dev"]
+ORDER = ["team_lead", "assistant", "travel", "web", "senior_dev", "junior_dev"]
 ORDER += [k for k in AGENTS if k not in ORDER]   # agents you add later show up automatically
 REPORTS_TO = {}
 for k, a in AGENTS.items():
