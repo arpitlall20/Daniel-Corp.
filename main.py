@@ -77,7 +77,8 @@ def main(argv: list[str]) -> None:
             continue
         transcript = chats.load(current)
         reply = agents[current].run(msg, chats.model_history(transcript)) or "(no reply)"
-        chats.save(current, transcript + [{"role": "you", "text": msg}, {"role": "agent", "text": reply}])
+        now = __import__("time").time()
+        chats.save(current, transcript + [{"role": "you", "text": msg, "ts": now}, {"role": "agent", "text": reply, "ts": now}])
         print(f"\n{agents[current].name}> " + reply + "\n")
     print(cost_report())
 

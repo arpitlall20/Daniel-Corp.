@@ -102,6 +102,9 @@
   .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--bg); color: var(--muted); margin-right: 4px; }
   .pill.done { background: var(--ok-soft); color: var(--ok); } .pill.doing, .pill.review { background: var(--accent-soft); color: var(--accent); }
   .pill.blocked { background: var(--warn-soft); color: var(--warn); }
+  button.earlier { border: 0; background: none; color: var(--accent); font-size: 13px; padding: 4px 8px; }
+  button.earlier:hover { text-decoration: underline; }
+  .remembers { font-size: 12px; margin-top: 6px; color: var(--ok); }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg);
     padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
   .toast.show { opacity: 1; }
@@ -129,7 +132,7 @@
   <section class="chat">
     <div class="chat-head">
       <div><div class="t" id="chatName">Team Lead</div><div class="s" id="chatSub"></div></div>
-      <button onclick="resetChat()" title="Clear this conversation. Team memory is kept.">New chat</button>
+      <button onclick="resetChat()" title="Erase this conversation so the agent starts fresh. Team memory is kept.">Forget chat</button>
     </div>
     <div class="approvals" id="approvals" aria-live="assertive"></div>
     <div class="messages" id="messages" aria-live="polite"></div>
@@ -175,6 +178,8 @@ const SUGGEST = {
   junior_dev: ["Add tests for the login function", "Fix typos in the README"],
 };
 let team = [], current = "team_lead", lastEvent = 0, sending = false, liveLines = [];
+const openedAt = Date.now() / 1000 - 1;   // only show messages from this visit; agents still remember the rest
+const showEarlier = new Set();
 
 const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function md(src) {
@@ -239,16 +244,22 @@ async function bulk(on) { await toggle("all", on); }
 
 async function pick(key) { current = key; renderTeam(); await loadTranscript(); $("input").focus(); }
 async function loadTranscript() { renderMessages(await api("/api/transcript?member=" + current)); }
-function renderMessages(list) {
+function renderMessages(all) {
   const box = $("messages");
+  const earlier = all.filter(m => !(m.ts >= openedAt));
+  const list = showEarlier.has(current) ? all : all.filter(m => m.ts >= openedAt);
+  const more = !showEarlier.has(current) && earlier.length
+    ? `<button class="earlier" onclick="showEarlier.add(current); loadTranscript()">Show earlier messages (${earlier.length})</button>` : "";
   if (!list.length && !sending) {
     const name = (team.find(m => m.key === current) || {}).name || "";
     box.innerHTML = `<div class="empty"><div class="big">Chat with your ${esc(name)}</div>
-      ${esc(ROLE[current] || "")}<div class="suggest">${(SUGGEST[current] || []).map(s =>
-      `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div></div>`;
+      ${esc(ROLE[current] || "")}${earlier.length ? `<div class="remembers">Remembers your earlier conversation</div>` : ""}
+      <div class="suggest">${(SUGGEST[current] || []).map(s =>
+      `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div>${more ? `<div style="margin-top:18px">${more}</div>` : ""}</div>`;
     return;
   }
-  box.innerHTML = list.map(m => `<div class="msg ${m.role}">${m.role === "you" ? esc(m.text) : md(m.text)}</div>`).join("")
+  box.innerHTML = (more ? `<div style="text-align:center">${more}</div>` : "")
+    + list.map(m => `<div class="msg ${m.role}">${m.role === "you" ? esc(m.text) : md(m.text)}</div>`).join("")
     + (sending ? `<div class="thinking" id="thinking">Working on it…${liveLines.map(l => `<span class="live">· ${esc(l)}</span>`).join("")}</div>` : "");
   box.scrollTop = box.scrollHeight;
 }
@@ -263,14 +274,16 @@ async function send(e) {
   const member = current;
   sending = true; liveLines = []; $("sendBtn").disabled = true; $("input").value = ""; autosize();
   const list = await api("/api/transcript?member=" + member);
-  renderMessages([...list, { role: "you", text }]);
+  renderMessages([...list, { role: "you", text, ts: Date.now() / 1000 }]);
   try { await api("/api/chat", { member, message: text }); }
   catch (err) { toast(err.message); }
   sending = false; $("sendBtn").disabled = false;
   if (member === current) await loadTranscript();
   refreshTeam(); refreshTasks(); if (!$("mem").hidden) loadMemory();
 }
-async function resetChat() { await api("/api/reset", { member: current }); loadTranscript(); toast("New conversation started. Team memory is kept."); }
+async function resetChat() {
+  if (!confirm("Erase this conversation from the agent's memory too? (Team memory facts are kept.)")) return;
+  await api("/api/reset", { member: current }); loadTranscript(); toast("New conversation started. Team memory is kept."); }
 
 async function pollActivity() {
   try {

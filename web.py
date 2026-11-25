@@ -12,6 +12,7 @@ import json
 import os
 import sys
 import threading
+import time
 import traceback
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -151,7 +152,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(409, {"error": f"{AGENTS[key].name} is still working on your last message."})
             try:
                 history = chats.model_history(TRANSCRIPTS[key])
-                TRANSCRIPTS[key].append({"role": "you", "text": text})
+                TRANSCRIPTS[key].append({"role": "you", "text": text, "ts": time.time()})
                 chats.save(key, TRANSCRIPTS[key])
                 log_event("You", f"to {AGENTS[key].name}: {text[:120]}")
                 try:
@@ -159,7 +160,7 @@ class Handler(BaseHTTPRequestHandler):
                 except Exception as e:  # show errors in the chat instead of crashing
                     traceback.print_exc()
                     reply = f"⚠️ Error: {type(e).__name__}: {e}"
-                TRANSCRIPTS[key].append({"role": "agent", "text": reply})
+                TRANSCRIPTS[key].append({"role": "agent", "text": reply, "ts": time.time()})
                 chats.save(key, TRANSCRIPTS[key])
                 return self._send(200, {"reply": reply, **team_state()})
             finally:
