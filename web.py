@@ -23,10 +23,11 @@ try:
 except ImportError:
     pass
 
-from team import approvals  # noqa: E402
+from team import approvals, chats  # noqa: E402
 from team.agent import COST_LOG, EVENTS, log_event  # noqa: E402
 from team.config import load, set_enabled  # noqa: E402
 from team.roster import all_agents, build_team  # noqa: E402
+from team.tools.memory import MEMORY, memory_text  # noqa: E402
 from team.tools.tasks import list_projects, list_tasks  # noqa: E402
 
 HOST, PORT = "127.0.0.1", int(os.getenv("PORT", "8000"))
@@ -39,8 +40,7 @@ REPORTS_TO = {}
 for k, a in AGENTS.items():
     for sub in a.team:
         REPORTS_TO[sub] = k
-HISTORIES: dict[str, list] = {k: [] for k in AGENTS}
-TRANSCRIPTS: dict[str, list] = {k: [] for k in AGENTS}   # what the page shows
+TRANSCRIPTS: dict[str, list] = {k: chats.load(k) for k in AGENTS}   # saved on disk, survives restarts
 LOCKS = {k: threading.Lock() for k in AGENTS}
 
 # ---- approvals in the browser -------------------------------------------------
@@ -108,6 +108,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/activity":
             since = int(self.path.split("since=")[-1]) if "since=" in self.path else 0
             return self._send(200, [e for e in EVENTS if e["id"] > since])
+        if path == "/api/memory":
+            return self._send(200, {"text": memory_text()})
         if path == "/api/approvals":
             with _plock:
                 return self._send(200, [{"id": i["id"], "action": i["action"]} for i in PENDING.values()])
@@ -133,7 +135,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True})
         if path == "/api/reset":
             key = body["member"]
-            HISTORIES[key].clear(); TRANSCRIPTS[key].clear()
+            TRANSCRIPTS[key].clear(); chats.clear(key)
+            return self._send(200, {"ok": True})
+        if path == "/api/memory":
+            MEMORY.parent.mkdir(exist_ok=True)
+            MEMORY.write_text((body.get("text") or "").strip() + "\n", encoding="utf-8")
+            log_event("You", "edited team memory")
             return self._send(200, {"ok": True})
         if path == "/api/chat":
             key, text = body.get("member"), (body.get("message") or "").strip()
@@ -143,15 +150,17 @@ class Handler(BaseHTTPRequestHandler):
             if not lock.acquire(blocking=False):
                 return self._send(409, {"error": f"{AGENTS[key].name} is still working on your last message."})
             try:
+                history = chats.model_history(TRANSCRIPTS[key])
                 TRANSCRIPTS[key].append({"role": "you", "text": text})
+                chats.save(key, TRANSCRIPTS[key])
                 log_event("You", f"to {AGENTS[key].name}: {text[:120]}")
                 try:
-                    reply = AGENTS[key].run(text, HISTORIES[key])
+                    reply = AGENTS[key].run(text, history) or "(no reply)"
                 except Exception as e:  # show errors in the chat instead of crashing
                     traceback.print_exc()
                     reply = f"⚠️ Error: {type(e).__name__}: {e}"
-                    HISTORIES[key].clear()  # a broken turn would poison the history
                 TRANSCRIPTS[key].append({"role": "agent", "text": reply})
+                chats.save(key, TRANSCRIPTS[key])
                 return self._send(200, {"reply": reply, **team_state()})
             finally:
                 lock.release()

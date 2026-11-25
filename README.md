@@ -67,6 +67,14 @@ python main.py tasks                             # show the shared task board
 Inside chat you can also type `switch travel` (talk to someone else), `status`, `on travel`, `off senior_dev`, `quit`.
 Each member remembers your conversation with them until you quit.
 
+## Memory
+
+- **Saved chats**: every conversation is saved in `data/chats/` and continues after a restart.
+  "New chat" clears one conversation. Agents see your last 20 messages, which keeps costs low.
+- **Team memory**: when you tell any agent a lasting fact ("I prefer morning meetings"), it saves it
+  to `data/memory.md`, and every agent reads it from then on. View or edit it in the panel's Memory tab.
+- Both stay on your computer; `.gitignore` keeps them out of GitHub.
+
 ## Safety rules built in
 
 - You approve (y/N in the terminal) before: creating/deleting calendar events, merging PRs, running unusual commands.

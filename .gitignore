@@ -3,3 +3,5 @@ data/team.db
 __pycache__/
 *.pyc
 workspace/
+data/chats/
+data/memory.md

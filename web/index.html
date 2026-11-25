@@ -129,7 +129,7 @@
   <section class="chat">
     <div class="chat-head">
       <div><div class="t" id="chatName">Team Lead</div><div class="s" id="chatSub"></div></div>
-      <button onclick="resetChat()" title="Start a fresh conversation with this member">New chat</button>
+      <button onclick="resetChat()" title="Clear this conversation. Team memory is kept.">New chat</button>
     </div>
     <div class="approvals" id="approvals" aria-live="assertive"></div>
     <div class="messages" id="messages" aria-live="polite"></div>
@@ -144,9 +144,21 @@
     <div class="tabs">
       <button class="on" id="tabAct" onclick="tab('act')">Activity</button>
       <button id="tabTasks" onclick="tab('tasks')">Task board</button>
+      <button id="tabMem" onclick="tab('mem')">Memory</button>
     </div>
     <div class="pane" id="activity"></div>
     <div class="pane" id="tasks" hidden></div>
+    <div class="pane" id="mem" hidden>
+      <div class="ev" style="color:var(--muted);border:0">What your whole team knows about you. Agents add to this when you
+        tell them something worth keeping. You can edit it too: one fact per line.</div>
+      <label class="sr" for="memText">Team memory</label>
+      <textarea id="memText" style="width:100%;min-height:340px;font-size:14px;line-height:1.5"
+        placeholder="- I prefer morning meetings&#10;- Home airport is BNE&#10;- My partner's name is ..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="primary" onclick="saveMemory()">Save</button>
+        <button onclick="loadMemory()">Undo changes</button>
+      </div>
+    </div>
   </aside>
 </main>
 <div class="toast" id="toast"></div>
@@ -256,9 +268,9 @@ async function send(e) {
   catch (err) { toast(err.message); }
   sending = false; $("sendBtn").disabled = false;
   if (member === current) await loadTranscript();
-  refreshTeam(); refreshTasks();
+  refreshTeam(); refreshTasks(); if (!$("mem").hidden) loadMemory();
 }
-async function resetChat() { await api("/api/reset", { member: current }); loadTranscript(); toast("Started a new conversation"); }
+async function resetChat() { await api("/api/reset", { member: current }); loadTranscript(); toast("New conversation started. Team memory is kept."); }
 
 async function pollActivity() {
   try {
@@ -309,9 +321,15 @@ async function refreshTasks() {
   } catch {}
 }
 function tab(which) {
-  $("activity").hidden = which !== "act"; $("tasks").hidden = which !== "tasks";
+  $("activity").hidden = which !== "act"; $("tasks").hidden = which !== "tasks"; $("mem").hidden = which !== "mem";
   $("tabAct").classList.toggle("on", which === "act"); $("tabTasks").classList.toggle("on", which === "tasks");
+  $("tabMem").classList.toggle("on", which === "mem");
   if (which === "tasks") refreshTasks();
+  if (which === "mem") loadMemory();
+}
+async function loadMemory() { try { $("memText").value = (await api("/api/memory")).text; } catch {} }
+async function saveMemory() {
+  try { await api("/api/memory", { text: $("memText").value }); toast("Team memory saved"); } catch (e) { toast(e.message); }
 }
 
 function autosize() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }

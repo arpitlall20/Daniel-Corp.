@@ -49,9 +49,9 @@ def main(argv: list[str]) -> None:
     current = argv[1] if cmd == "chat" and len(argv) > 1 else ("team_lead" if cmd == "chat" else cmd)
     if current not in agents:
         print(f"Unknown member '{current}'. Choose: {', '.join(agents)}"); return
-    histories: dict[str, list] = {k: [] for k in agents}
+    from team import chats
     print(status() + f"\nChatting with: {agents[current].name}"
-          "\nCommands: 'switch <member>', 'status', 'on X', 'off X', 'quit'.\n")
+          "\nCommands: 'switch <member>', 'new chat', 'status', 'on X', 'off X', 'quit'.\n")
     while True:
         try:
             msg = input(f"you -> {current}> ").strip()
@@ -64,6 +64,8 @@ def main(argv: list[str]) -> None:
             break
         if msg == "status":
             print(status()); continue
+        if msg == "new chat":
+            chats.clear(current); print("Started a fresh conversation (team memory is kept).\n"); continue
         if words[0] in ("on", "off") and len(words) == 2:
             print(set_enabled(words[1], words[0] == "on")); continue
         if words[0] == "switch" and len(words) == 2:
@@ -73,7 +75,10 @@ def main(argv: list[str]) -> None:
             else:
                 print(f"Unknown member. Choose: {', '.join(agents)}")
             continue
-        print(f"\n{agents[current].name}> " + agents[current].run(msg, histories[current]) + "\n")
+        transcript = chats.load(current)
+        reply = agents[current].run(msg, chats.model_history(transcript)) or "(no reply)"
+        chats.save(current, transcript + [{"role": "you", "text": msg}, {"role": "agent", "text": reply}])
+        print(f"\n{agents[current].name}> " + reply + "\n")
     print(cost_report())
 
 
