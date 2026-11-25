@@ -29,6 +29,7 @@ except ImportError:
 from team import approvals, chats, usage  # noqa: E402
 from team import agent as core  # noqa: E402
 from team.config import load, set_enabled, set_model  # noqa: E402
+from team import meeting as mtg  # noqa: E402
 from team import org, routines  # noqa: E402
 from team.tools.memory import MEMORY, memory_text  # noqa: E402
 from team.tools.tasks import list_projects, list_tasks  # noqa: E402
@@ -191,6 +192,60 @@ def set_autostart(on: bool) -> dict:
     return autostart_state()
 
 
+# ---- meetings ---------------------------------------------------------------------------
+MEETING: dict[str, mtg.Meeting] = {}
+
+
+def meeting_action(action: str, body: dict) -> tuple[int, dict]:
+    m = MEETING.get("live")
+    if action == "start":
+        if m and m.status in ("live", "wrapping"):
+            return 409, {"error": "A meeting is already running."}
+        cfg = load()["agents"]
+        attendees = [k for k in body.get("attendees", []) if k in AGENTS and cfg.get(k, {}).get("enabled")]
+        if not attendees:
+            return 400, {"error": "Invite at least one team member who's switched on."}
+        MEETING["live"] = mtg.Meeting(AGENTS, body.get("title", ""), body.get("agenda", []), attendees)
+        core.log_event("You", f"started a meeting: {MEETING['live'].title}", "system", key="you")
+        return 200, {"meeting": MEETING["live"].state()}
+    if action == "close":
+        if m and m.status != "live":
+            MEETING.pop("live", None)
+        return 200, {"ok": True}
+    if not m or m.status not in ("live", "wrapping"):
+        return 409, {"error": "No meeting is running."}
+    key = body.get("key", "")
+    if action == "say":
+        m.say(body.get("text", ""))
+    elif action == "react":
+        m.react("you", body.get("emoji", ""))
+    elif action == "hand":
+        m.raise_hand(bool(body.get("raised")))
+    elif action == "call_on" and key in m.attendees:
+        m.call_on(key)
+    elif action == "lower":
+        m.lower(key)
+    elif action == "mute" and key in m.attendees:
+        m.set_muted(key, bool(body.get("muted")))
+    elif action == "invite" and key in AGENTS:
+        m.invite(key)
+    elif action == "remove":
+        m.remove(key)
+    elif action == "hold":
+        m.set_hold(bool(body.get("on")))
+    elif action == "around":
+        m.go_around()
+    elif action == "agenda":
+        m.agenda_action(body.get("action", ""), int(body.get("index", -1)), body.get("text", ""))
+    elif action == "wrap":
+        m.wrap_up()
+    elif action == "end":
+        m.end()
+    else:
+        return 400, {"error": "Unknown meeting action."}
+    return 200, {"ok": True}
+
+
 # ---- state for the page ---------------------------------------------------------
 def team_state() -> dict:
     cfg = load()["agents"]
@@ -206,7 +261,7 @@ def team_state() -> dict:
         members.append({"key": k, "name": a.name, "model": a.model, "enabled": enabled, "state": state,
                         "doing": st.get("doing", ""), "task": st.get("task", ""), "since": st.get("since", 0),
                         "busy": k in busy, "reports_to": reports.get(k, "team_lead"), "manages": list(a.team),
-                        "icon": a.icon, "role": a.role, "custom": a.custom,
+                        "icon": a.icon, "role": a.role, "custom": a.custom, "person": a.person, "gender": a.gender,
                         "cost": round(core.COST_LOG.get(a.name, 0.0), 5), "cost_all": spent.get(a.name, 0.0)})
     return {"members": members}
 
@@ -254,7 +309,7 @@ def profile(key: str) -> dict:
     return {"key": key, "name": a.name, "model": a.model, "models": list(core.PRICES),
             "prices": {m: p[:2] for m, p in core.PRICES.items()},
             "reports_to": org.parents().get(key, "team_lead"), "manages": [AGENTS[k].name for k in a.team],
-            "icon": a.icon, "role": a.role, "custom": a.custom, "spec": org.spec_of(key),
+            "icon": a.icon, "role": a.role, "custom": a.custom, "spec": org.spec_of(key), "person": a.person, "gender": a.gender,
             "can_report_to": ["you"] + [k for k in org.ordered_keys() if k != key and k not in _team_of(key)],
             "tools": [{"name": t.name, "description": t.description.split(". ")[0]} for t in a.tools]
                      + [{"name": s.get("name", "tool"), "description": "Search the web for current information"}
@@ -333,6 +388,15 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/transcript":
             key = q.get("member", "")
             return self._send(200, transcript(key) if key in AGENTS else [])
+        if path == "/api/meeting":
+            m = MEETING.get("live")
+            since = int(q.get("since", 0) or 0)
+            return self._send(200, {"meeting": m.state(since) if m else None, "emojis": mtg.EMOJIS})
+        if path == "/api/meetings":
+            return self._send(200, mtg.history())
+        if path == "/api/meetings/get":
+            d = mtg.load_meeting(q.get("id", ""))
+            return self._send(200, d) if d else self._send(404, {"error": "not found"})
         if path == "/api/routines":
             return self._send(200, {"routines": routines.all_routines(), "autostart": autostart_state(),
                                     "now": routines.now().isoformat()})
@@ -428,6 +492,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(400, {"error": str(e)})
             core.log_event("You", msg, "system", key="you")
             return self._send(200, {"message": msg, **team_state()})
+        if path == "/api/agents/person":
+            try:
+                msg = org.set_person(body.get("key", ""), body.get("person", ""), body.get("gender", ""))
+            except ValueError as e:
+                return self._send(400, {"error": str(e)})
+            core.log_event("You", msg, "system", key="you", target=body.get("key"))
+            return self._send(200, {"message": msg, **team_state()})
+        if path.startswith("/api/meeting/"):
+            return self._send(*meeting_action(path.rsplit("/", 1)[-1], body))
         if path.startswith("/api/routines/"):
             action = path.rsplit("/", 1)[-1]
             try:

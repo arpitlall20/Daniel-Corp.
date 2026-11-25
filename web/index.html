@@ -261,6 +261,70 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
 .checkrow { display: flex; gap: 8px; align-items: center; font-size: 14px; margin-top: 10px; }
 .msg.you.routine { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); font-size: 13px; }
 .form [hidden] { display: none; }
+main.meeting-live { grid-template-columns: 270px 1fr 0; } main.meeting-live aside.side { display: none; }
+.mt { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+.mt-stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+.mt-top { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.mt-top .grow { flex: 1; min-width: 0; } .mt-top .ttl { font-weight: 600; font-size: 16px; }
+.livedot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--danger); font-weight: 600; }
+.livedot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: pulse 1.2s infinite; }
+.mt-top .nums { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tiles { flex: 1; overflow: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; align-content: start; }
+.tile { position: relative; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 18px 10px 12px; text-align: center; transition: border-color .2s, box-shadow .2s; min-height: 168px; }
+.tile.speaking { border-color: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
+.tile.thinking { border-color: var(--accent); }
+.tile.hand { border-color: var(--warn); }
+.tile.muted { opacity: .55; }
+.tile .big { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 8px; font-size: 32px; background: var(--panel2); border: 2px solid var(--line); position: relative; }
+.tile.thinking .big::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--accent); animation: spin 1s linear infinite; }
+.tile .pn { font-weight: 600; font-size: 15px; } .tile .pt { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .ps { font-size: 12px; margin-top: 6px; min-height: 16px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile.speaking .ps { color: var(--ok); } .tile.thinking .ps { color: var(--accent); } .tile.hand .ps { color: var(--warn); }
+.bars { display: inline-flex; gap: 2px; align-items: flex-end; height: 14px; vertical-align: -2px; margin-right: 4px; }
+.bars i { width: 3px; background: var(--ok); border-radius: 2px; animation: bar .9s ease-in-out infinite; }
+.bars i:nth-child(2) { animation-delay: .15s; } .bars i:nth-child(3) { animation-delay: .3s; } .bars i:nth-child(4) { animation-delay: .45s; }
+@keyframes bar { 0%, 100% { height: 3px; } 50% { height: 14px; } }
+.handb { position: absolute; top: 8px; left: 8px; background: var(--warn); color: #fff; border-radius: 12px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+.mutedb { position: absolute; top: 8px; left: 8px; font-size: 14px; }
+.tmenu { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+.tile:hover .tmenu, .tile:focus-within .tmenu { opacity: 1; }
+.tmenu button { font-size: 12px; padding: 3px 7px; }
+.tile .callon { margin-top: 8px; font-size: 12px; padding: 4px 10px; }
+.floatr { position: absolute; left: 50%; bottom: 40%; font-size: 30px; pointer-events: none; animation: rise 2.2s ease-out forwards; }
+@keyframes rise { 0% { opacity: 0; transform: translate(-50%, 0) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -90px) scale(1); } }
+.caption { margin: 0 16px 10px; min-height: 52px; background: rgba(20,20,20,.86); color: #fff; border-radius: 12px; padding: 10px 14px; font-size: 15px; line-height: 1.45; }
+.caption b { color: #9fe1cb; } .caption.idle { background: var(--panel); color: var(--muted); border: 1px dashed var(--line); }
+.mt-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--panel); }
+.cbtn { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; padding: 6px 8px; border-radius: 10px; font-size: 11px; background: var(--panel2); }
+.cbtn .e { font-size: 19px; line-height: 1.1; }
+.cbtn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.cbtn.mic-on { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.cbtn.hand-on { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.cbtn.end { background: var(--danger); border-color: var(--danger); color: #fff; }
+.cbtn.wrap { background: var(--accent); border-color: var(--accent); color: #fff; }
+.popover { position: absolute; bottom: 70px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 8px; display: flex; gap: 4px; z-index: 20; }
+.popover button { font-size: 22px; border: 0; background: none; padding: 4px 6px; } .popover button:hover { transform: scale(1.25); }
+.mt-say { display: flex; gap: 8px; padding: 0 14px 12px; background: var(--panel); }
+.mt-say input { flex: 1; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+.mt-side { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+.tline { display: flex; gap: 8px; padding: 7px 0; font-size: 13px; line-height: 1.45; animation: fadein .3s; }
+.tline .ic { width: 26px; height: 26px; flex: none; border-radius: 50%; background: var(--panel2); display: grid; place-items: center; font-size: 14px; }
+.tline .tx { flex: 1; min-width: 0; overflow-wrap: anywhere; } .tline .who { font-weight: 600; } .tline .tm { color: var(--muted); font-size: 11px; margin-left: 4px; font-weight: 400; }
+.tline.sys { justify-content: center; color: var(--muted); font-size: 12px; text-align: center; }
+.tline.small { color: var(--muted); font-size: 12px; padding: 3px 0; }
+.ag { display: flex; gap: 8px; align-items: flex-start; padding: 7px 8px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.ag:hover { background: var(--panel2); } .ag.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; } .ag.done .t { text-decoration: line-through; color: var(--muted); }
+.lobby { flex: 1; overflow: auto; padding: 20px; }
+.lobby .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; }
+.lobby h3 { margin: 0 0 4px; font-size: 18px; }
+.inv { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.inv label { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; font-size: 13px; }
+.inv label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); } .inv label.dis { opacity: .5; cursor: not-allowed; }
+.past { display: flex; gap: 12px; align-items: center; border-bottom: 1px solid var(--line); padding: 10px 0; font-size: 14px; }
+.past .grow { flex: 1; min-width: 0; } .past .icons { letter-spacing: 2px; }
+.minutes h4 { margin: 14px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.minutes ul { margin: 0; padding-left: 20px; } .minutes li { margin: 3px 0; }
+@media (max-width: 1180px) { .mt { grid-template-columns: 1fr; } .mt-side { display: none; } }
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
 .toast.show { opacity: 1; }
 @media (max-width: 1180px) { main { grid-template-columns: 240px 1fr; } aside.side { display: none; } .hide-s { display: none; } }
@@ -279,7 +343,7 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
   <button class="ghost hbtn" onclick="cycleTheme()" aria-label="Switch theme" id="themeBtn">🌓</button>
   <button class="ghost hbtn" onclick="openHelp()" title="What can my team do? (?)" aria-label="Help">❔</button>
 </header>
-<main>
+<main id="main">
   <aside class="team" aria-label="Your team">
     <div class="label">Your team</div>
     <div id="members"></div>
@@ -289,7 +353,7 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
     <div class="label" style="margin-top:22px">Shortcuts</div>
     <div class="muted" style="font-size:12px;line-height:2;padding:0 8px">
       <span class="kbd">Alt</span>+<span class="kbd">1–7</span> switch agent<br>
-      <span class="kbd">Alt</span>+<span class="kbd">M</span> map · <span class="kbd">Alt</span>+<span class="kbd">C</span> chat · <span class="kbd">Alt</span>+<span class="kbd">R</span> routines<br>
+      <span class="kbd">Alt</span>+<span class="kbd">M</span> map · <span class="kbd">Alt</span>+<span class="kbd">C</span> chat · <span class="kbd">Alt</span>+<span class="kbd">R</span> routines · <span class="kbd">Alt</span>+<span class="kbd">T</span> meeting<br>
       <span class="kbd">/</span> type · <span class="kbd">?</span> help · <span class="kbd">Esc</span> close</div>
   </aside>
 
@@ -298,6 +362,7 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
       <button id="vChat" class="on" onclick="setView('chat')">💬 Chat</button>
       <button id="vMap" onclick="setView('map')">🗺️ Live team map</button>
       <button id="vRout" onclick="setView('rout')">⏰ Routines<span id="routDot"></span></button>
+      <button id="vMeet" onclick="setView('meet')">🎙️ Meeting<span id="meetDot"></span></button>
     </div>
     <div class="view" id="chatView">
       <div class="chat-head">
@@ -315,6 +380,7 @@ select { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid
         <button class="primary" id="sendBtn" type="submit">Send</button>
       </form>
     </div>
+    <div class="view" id="meetView" hidden></div>
     <div class="view" id="routView" hidden>
       <div class="rwrap">
         <div class="rhead"><div class="grow"><h3>⏰ Routines</h3><p>Jobs your team does on a schedule. Or just tell the Team Lead, e.g. “every weekday at 7:30 give me a briefing”.</p></div>
@@ -406,7 +472,8 @@ const money = v => { v = v || 0; return "$" + (v < 1 ? v.toFixed(4) : v.toFixed(
 const nowS = () => Date.now() / 1000 + S.offset;
 const dur = s => { s = Math.max(0, Math.round(s)); return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`; };
 const member = k => S.team.find(m => m.key === k);
-const nameOf = k => k === "you" ? "You" : (member(k) || {}).name || k || "";
+const nameOf = k => k === "you" ? "You" : (member(k) || {}).person || (member(k) || {}).name || k || "";
+const titleOf = k => (member(k) || {}).name || "";
 const iconOf = k => (member(k) || {}).icon || ICON[k] || nameOf(k).split(/\s+/).map(w => w[0]).join("").slice(0, 2);
 const roleOf = k => ROLE[k] || (member(k) || {}).role || "";
 function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2400); }
@@ -443,10 +510,10 @@ function depth(k) { let d = 0, cur = member(k); while (cur && cur.reports_to !==
 function stateText(m) {
   if (!m) return "";
   return { working: doingLabel(m.doing) || "Working…", delegating: m.doing || "Delegating…", waiting: "✋ Needs your approval",
-    error: "⚠️ " + (m.doing || "Problem"), idle: roleOf(m.key) || m.model, off: "Switched off" }[m.state] || "";
+    error: "⚠️ " + (m.doing || "Problem"), idle: (m.person ? m.name : roleOf(m.key)) || m.model, off: "Switched off" }[m.state] || "";
 }
 function eventView(e) {
-  const who = `<b>${esc(e.agent)}</b>`;
+  const who = `<b>${esc(e.key && e.key !== "you" && member(e.key) ? nameOf(e.key) : e.agent)}</b>`;
   let ic = KIND_ICON[e.kind] || "•", text = esc(e.text), cls = "";
   if (e.kind === "tool") { const [name, arg] = (e.detail || "").split("|"); const t = TOOL[name] || ["🛠️", name];
     ic = t[0]; text = `${esc(t[1])}${arg ? `<span class="dt">${esc(arg)}</span>` : ""}`; }
@@ -496,7 +563,8 @@ function renderPills() {
   const working = S.team.filter(m => ["working", "delegating"].includes(m.state));
   let h = "";
   if (S.approvals.length) h += `<span class="pill-live need" onclick="document.querySelector('.appr button.yes')?.focus()"><span class="d"></span>${S.approvals.length} waiting for you</span>`;
-  if (working.length) h += `<span class="pill-live work" onclick="setView('map')"><span class="d"></span>${working.length} working: ${working.map(m => esc(m.name)).join(", ")}</span>`;
+  if (working.length) h += `<span class="pill-live work" onclick="setView('map')"><span class="d"></span>${working.length} working: ${working.map(m => esc(m.person || m.name)).join(", ")}</span>`;
+  if (typeof mtLive === "function" && mtLive()) h = `<span class="pill-live work" onclick="setView('meet')"><span class="d" style="color:var(--danger)"></span>🎙️ Meeting live: ${esc(MT.st.title)}</span>` + h;
   if (!h) h = `<span class="pill-live" onclick="setView('map')"><span class="d" style="color:var(--ok)"></span>All quiet · ${S.team.filter(m => m.enabled).length} of ${S.team.length} switched on</span>`;
   if (h !== renderPills.last) { $("pills").innerHTML = h; renderPills.last = h; }
 }
@@ -514,7 +582,7 @@ function renderTeam() {
       onclick="pick('${m.key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')pick('${m.key}')" title="Alt+${i + 1}${m.key !== "team_lead" ? " · drag onto someone to change their manager" : ""}"
       ${m.key !== "team_lead" ? `draggable="true" ondragstart="dragStart(event,'${m.key}')" ondragend="dragEnd()"` : ""} ${dz}>
       <div class="av ${st}">${iconOf(m.key)}</div>${S.unread[m.key] ? `<span class="badge">${S.unread[m.key]}</span>` : ""}
-      <div class="who"><div class="n">${esc(m.name)}</div><div class="m ${cls}">${esc(stateText(m))}</div></div>
+      <div class="who"><div class="n">${esc(m.person || m.name)}</div><div class="m ${cls}">${esc(stateText(m))}</div></div>
       <label class="switch" onclick="event.stopPropagation()" title="${m.enabled ? "Switch off" : "Switch on"}">
         <input type="checkbox" ${m.enabled ? "checked" : ""} aria-label="${esc(m.name)} on or off" onchange="toggle('${m.key}', this.checked)"><span></span></label></div>`;
   }).join("");
@@ -526,11 +594,11 @@ const bulk = on => toggle("all", on);
 function renderChatHead() {
   const m = member(S.current); if (!m) return;
   $("chatAv").textContent = iconOf(m.key); $("chatAv").className = "av " + m.state;
-  $("chatName").textContent = m.name;
+  $("chatName").textContent = m.person ? `${m.person} · ${m.name}` : m.name;
   const tag = $("chatState"); tag.className = "state-tag " + m.state;
   tag.textContent = { working: "Working", delegating: "Delegating", waiting: "Needs you", error: "Problem", idle: "Idle", off: "Off" }[m.state] || m.state;
   $("chatSub").textContent = `${m.state === "idle" ? roleOf(m.key) : stateText(m)} · ${m.model} · ${money(m.cost)} this session`;
-  $("input").placeholder = m.enabled ? `Message ${m.name}…` : `${m.name} is switched off. Turn it on to chat.`;
+  $("input").placeholder = m.enabled ? `Message ${m.person || m.name}…` : `${m.person || m.name} is switched off. Turn them on to chat.`;
 }
 
 /* chat */
@@ -544,7 +612,7 @@ function renderMessages() {
   const run = S.active.find(r => r.member === S.current);
   if (!list.length && !run) {
     const m = member(S.current) || {};
-    box.innerHTML = `<div class="empty"><div class="emo">${iconOf(S.current)}</div><div class="big">Chat with your ${esc(m.name || "")}</div>
+    box.innerHTML = `<div class="empty"><div class="emo">${iconOf(S.current)}</div><div class="big">Chat with ${m.person ? esc(m.person) + ", your " + esc(m.name) : "your " + esc(m.name || "")}</div>
       ${esc(roleOf(S.current))}${earlier.length ? `<div class="remembers">✓ Remembers your earlier conversation</div>` : ""}
       <div class="suggest">${(SUGGEST[S.current] || ["What can you help me with?", "Introduce yourself"]).map(s => `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div>
       ${more ? `<div style="margin-top:16px">${more}</div>` : ""}</div><div id="runSlot"></div>`;
@@ -671,8 +739,10 @@ function cycleTheme() { const order = ["auto", "light", "dark"]; const t = order
 
 /* views */
 function setView(v) {
-  S.view = v; $("chatView").hidden = v !== "chat"; $("mapView").hidden = v !== "map"; $("routView").hidden = v !== "rout";
-  $("vChat").classList.toggle("on", v === "chat"); $("vMap").classList.toggle("on", v === "map"); $("vRout").classList.toggle("on", v === "rout");
+  S.view = v; $("chatView").hidden = v !== "chat"; $("mapView").hidden = v !== "map"; $("routView").hidden = v !== "rout"; $("meetView").hidden = v !== "meet";
+  $("vChat").classList.toggle("on", v === "chat"); $("vMap").classList.toggle("on", v === "map"); $("vRout").classList.toggle("on", v === "rout"); $("vMeet").classList.toggle("on", v === "meet");
+  $("main").classList.toggle("meeting-live", v === "meet" && mtLive());
+  if (v === "meet") { $("meetView").innerHTML = ""; MT.tileSig = MT.ctlSig = MT.paneSig = ""; mtPoll().then(renderMeeting); }
   if (v === "rout") { $("routDot").innerHTML = ""; loadRoutines(); }
   if (v === "map") { buildMap(); updateMap(); renderNow(); renderTicker(); } else renderRunCard(true);
   renderTeam();
@@ -824,7 +894,7 @@ async function openProfile(key) {
   const m = member(key) || {};
   const tools = p.tools.filter(t => t.name !== "delegate");
   $("drawer").innerHTML = `<div class="dhead"><div class="av ${m.state}">${iconOf(key)}</div>
-      <div style="flex:1"><div style="font-weight:600;font-size:17px">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(roleOf(key))}</div></div>
+      <div style="flex:1"><div style="font-weight:600;font-size:17px">${esc(p.person || p.name)}</div><div class="muted" style="font-size:13px">${esc(p.person ? p.name + " · " : "")}${esc(roleOf(key))}</div></div>
       ${p.custom ? `<button onclick="openAddAgent('${key}')">✏️ Edit</button>` : ""}
       <button class="ghost hbtn" onclick="closeAll()" aria-label="Close">✕</button></div>
     <div class="dbody">
@@ -834,6 +904,10 @@ async function openProfile(key) {
           : `<div class="row"><span>Reports to</span><select style="width:auto;max-width:230px" onchange="setParent('${key}', this.value)" aria-label="Reports to">
               ${p.can_report_to.map(k => `<option value="${k}" ${k === p.reports_to ? "selected" : ""}>${k === "you" ? "👤 You (directly)" : iconOf(k) + " " + esc(nameOf(k))}</option>`).join("")}</select></div>`}
         ${p.manages.length ? `<div class="row"><span>Manages</span><span>${p.manages.map(esc).join(", ")}</span></div>` : ""}</div>
+      <div class="dsec"><h4>Name & voice</h4><div style="display:flex;gap:8px">
+        <input id="pPerson" value="${esc(p.person || "")}" placeholder="First name" maxlength="24" aria-label="Name" style="flex:1;font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text)">
+        <select id="pGender" style="width:auto" aria-label="Voice"><option value="female" ${p.gender === "female" ? "selected" : ""}>👩 Female voice</option><option value="male" ${p.gender === "male" ? "selected" : ""}>👨 Male voice</option><option value="" ${!p.gender ? "selected" : ""}>Any voice</option></select>
+        <button onclick="savePerson('${key}')">Save</button><button onclick="previewVoice('${key}')" title="Hear their voice">🔊</button></div></div>
       <div class="dsec"><h4>Brain (model)</h4>
         <select onchange="setModel('${key}', this.value)" aria-label="Model">${p.models.map(x => `<option value="${x}" ${x === p.model ? "selected" : ""}>${x}  ($${p.prices[x][0]} in / $${p.prices[x][1]} out per M tokens)</option>`).join("")}</select>
         <div class="muted" style="font-size:12px;margin-top:6px">Opus is the smartest, Sonnet is balanced, Haiku is the fastest and cheapest. Changes apply to the next message.</div></div>
@@ -844,10 +918,20 @@ async function openProfile(key) {
       <div class="dsec"><h4>Spending</h4><div class="row"><span>This session</span><b>${money(p.cost_session)}</b></div><div class="row"><span>All time</span><b>${money(p.cost_all)}</b></div></div>
       <div class="dsec"><h4>Recent work</h4>${p.recent.length ? p.recent.map(e => { const v = eventView(e);
           return `<div class="ev ${v.cls}"><span class="ic">${v.ic}</span><span class="tx">${v.text}</span><span class="tm">${e.time}</span></div>`; }).join("") : `<div class="muted" style="font-size:13px">Nothing yet this session.</div>`}</div>
-      <button class="primary" style="width:100%;padding:10px" onclick="closeAll(); pick('${key}')">💬 Chat with ${esc(p.name)}</button>
+      <button class="primary" style="width:100%;padding:10px" onclick="closeAll(); pick('${key}')">💬 Chat with ${esc(p.person || p.name)}</button>
       ${p.custom ? `<button class="danger" style="width:100%;padding:10px;margin-top:8px" onclick="removeAgent('${key}')">Remove ${esc(p.name)} from the team</button>` : ""}
     </div>`;
   $("drawer").classList.add("show"); $("scrim").classList.add("show");
+}
+async function savePerson(key) {
+  try { const d = await api("/api/agents/person", { key, person: $("pPerson").value, gender: $("pGender").value });
+    S.team = d.members; VOICES = null; renderTeam.last = ""; renderTeam(); renderChatHead(); toast(d.message); openProfile(key); } catch (e) { toast(e.message); }
+}
+function previewVoice(key) {
+  if (!("speechSynthesis" in window)) return toast("Your browser can't speak");
+  const m = member(key) || {}; VOICES = null; const g = $("pGender")?.value; if (g !== undefined) m.gender = g;
+  const v = voiceFor(key); const u = new SpeechSynthesisUtterance(`Hi, I'm ${$("pPerson")?.value || m.person || m.name}, your ${m.name}.`);
+  if (v.voice) u.voice = v.voice; u.pitch = v.pitch; u.rate = v.rate; speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 async function setModel(key, model) { try { await api("/api/model", { key, model }); toast(`${nameOf(key)} now uses ${model}`); } catch (e) { toast(e.message); } }
 function closeAll() { $("drawer").classList.remove("show"); $("modal").classList.remove("show"); $("scrim").classList.remove("show"); }
@@ -885,6 +969,7 @@ function openHelp() {
     <h5>👀 Can I see what they're doing?</h5><p>Live, step by step: the team map, the progress card in chat, “Show steps” under every reply, and the Activity feed.</p>
     <h5>🔀 Can several agents work at once?</h5><p>Yes. Message different agents and they work in parallel; each one handles one request at a time.</p>
     <h5>⏰ Can it do things on a schedule?</h5><p>Yes. Make a routine in the Routines tab (or just ask the Team Lead): daily, weekdays, chosen days, every few hours, monthly or once. Turn on “Start with Windows” so routines run even when you haven't opened the panel.</p>
+    <h5>🎙️ Can I have a meeting with them?</h5><p>Yes: the Meeting tab. Talk or type to everyone, they raise hands, react, answer out loud in their own voices and can check real data. Raise your hand to take the floor, call on people, go around the room, follow an agenda, then Wrap up for notes and action items.</p>
     <h5>💸 What does it cost?</h5><p>Every reply shows its cost. The header shows today, this month and all time; the Usage tab breaks it down by agent and day. Switch any agent to a cheaper model in its profile.</p>
     <h5>🏠 Where does my data live?</h5><p>On your computer. Chats, memory and logs stay in the data folder and are never uploaded to GitHub.</p>
     <h5>⏰ Does it work when the panel is closed?</h5><p>Agents work while web.py (the black window) is running. Closing the browser tab is fine; closing the black window stops them.</p>
@@ -918,6 +1003,8 @@ async function openAddAgent(editKey) {
   modal(editKey ? `✏️ Edit ${esc(spec.name)}` : "＋ Add a team member", `<div class="form">
     ${editKey ? "" : `<span class="fl" style="margin-top:0">Start from a template</span><div class="tpls">${TEMPLATES.map((t, i) => `<button type="button" onclick="applyTemplate(${i})">${t.label}</button>`).join("")}</div>`}
     <span class="fl">Name</span><input type="text" id="fName" maxlength="40" placeholder="e.g. Social Media Manager" value="${esc(spec.name)}">
+    <div class="two"><div><span class="fl">Their first name</span><input type="text" id="fPerson" maxlength="24" placeholder="e.g. Ava" value="${esc(spec.person || "")}"></div>
+      <div><span class="fl">Voice</span><select id="fGender"><option value="female" ${spec.gender !== "male" ? "selected" : ""}>👩 Female</option><option value="male" ${spec.gender === "male" ? "selected" : ""}>👨 Male</option></select></div></div>
     <span class="fl">Look</span><div class="emojis" id="fEmojis">${EMOJIS.map(e => `<button type="button" class="${e === spec.icon ? "on" : ""}" onclick="pickEmoji('${e}')">${e}</button>`).join("")}
       <input type="text" id="fIcon" maxlength="4" value="${esc(spec.icon)}" style="width:64px;text-align:center" aria-label="Or type any emoji"></div>
     <span class="fl">Job in one line</span><input type="text" id="fRole" maxlength="80" placeholder="e.g. drafts posts for LinkedIn and Instagram" value="${esc(spec.role)}">
@@ -941,6 +1028,7 @@ function applyTemplate(i) {
 }
 async function saveAgent(editKey) {
   const body = { key: editKey, name: $("fName").value.trim(), icon: $("fIcon").value.trim(), role: $("fRole").value.trim(),
+    person: $("fPerson").value.trim(), gender: $("fGender").value,
     instructions: $("fInstr").value.trim(), reports_to: $("fBoss").value, model: $("fModel").value,
     abilities: [...document.querySelectorAll(".abil input:checked")].map(c => c.value) };
   if (!body.name) { $("fErr").textContent = "Give your new team member a name."; $("fName").focus(); return; }
@@ -1107,6 +1195,311 @@ async function saveRoutine(id) {
 }
 setInterval(() => { if (S.view === "rout" && !$("modal").classList.contains("show")) loadRoutines(); }, 15000);
 
+
+/* ---------- meeting room ---------- */
+const MT = { st: null, lastId: 0, entries: [], emojis: ["👍", "❤️", "😂", "👏", "🎉", "🤔", "✅", "😮", "🙌", "💡"], tab: "transcript",
+  voiceOn: store.get("mtVoice", true), micOn: false, rec: null, recPaused: false, queue: [], speaking: null, caption: null, interim: "",
+  fakeSpeak: {}, seen: new Set(), polling: false, lobbySel: null };
+const MTEMPLATES = [
+  { label: "☀️ Daily stand-up", title: "Daily stand-up", agenda: ["What everyone did yesterday", "What's planned today", "Anything blocking you"] },
+  { label: "🗓️ Weekly planning", title: "Weekly planning", agenda: ["Review last week", "This week's priorities", "Calendar and deadlines", "Who does what"] },
+  { label: "💡 Brainstorm", title: "Brainstorm", agenda: ["The problem", "Ideas (no bad ideas)", "Pick the best 3", "Next steps"] },
+  { label: "🚀 Project kickoff", title: "Project kickoff", agenda: ["Goal and deadline", "What each person will do", "Risks", "First steps this week"] },
+  { label: "❓ Quick question", title: "Quick question for the team", agenda: [] },
+];
+const FEMALE_V = /female|zira|hazel|susan|catherine|natasha|libby|sonia|aria|jenny|michelle|samantha|karen|moira|tessa|victoria|fiona|serena|emma|ava|allison|clara|elsa|isabella|sara|ana|jane|nancy|amber|ashley|cora|elizabeth|maisie|mia|olivia|freya|hollie/i;
+const MALE_V = /\bmale|david|mark|george|james|ryan|william|guy|christopher|eric|daniel|alex|fred|tom|oliver|arthur|liam|thomas|brian|andrew|roger|ken|davis|jason|tony|brandon|elliot|ethan|duncan|ken|neil|darren|connor/i;
+let VOICES = null;
+function voicePools() {
+  const all = ("speechSynthesis" in window ? speechSynthesis.getVoices() : []).filter(v => /^en/i.test(v.lang));
+  const rank = v => (/natural|online|neural/i.test(v.name) ? 0 : 1) + (/en-AU/i.test(v.lang) ? 0 : /en-GB/i.test(v.lang) ? .3 : .5);
+  all.sort((a, b) => rank(a) - rank(b));
+  const f = all.filter(v => FEMALE_V.test(v.name)), m = all.filter(v => !FEMALE_V.test(v.name) && MALE_V.test(v.name));
+  return { f, m, any: all };
+}
+function voiceFor(key) {
+  VOICES ||= {};
+  if (VOICES[key]) return VOICES[key];
+  const pools = voicePools(), mem = member(key) || {};
+  const sameGender = S.team.filter(x => (x.gender || "") === (mem.gender || "")).map(x => x.key);
+  const idx = Math.max(0, sameGender.indexOf(key));
+  const pool = mem.gender === "male" ? pools.m : mem.gender === "female" ? pools.f : pools.any;
+  const voice = pool.length ? pool[idx % pool.length] : (pools.any[idx % Math.max(1, pools.any.length)] || null);
+  const pitchBase = mem.gender === "male" ? .85 : mem.gender === "female" ? 1.12 : 1;
+  const reuse = pool.length ? Math.floor(idx / pool.length) : idx;
+  VOICES[key] = { voice, pitch: pitchBase + (reuse % 3) * .08 * (mem.gender === "male" ? -1 : 1), rate: 1.02 + (idx % 2) * .06 };
+  return VOICES[key];
+}
+if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = () => { VOICES = null; };
+
+function mtLive() { return MT.st && ["live", "wrapping"].includes(MT.st.status); }
+async function mtPoll() {
+  if (MT.polling) return; MT.polling = true;
+  try {
+    const d = await api("/api/meeting?since=" + MT.lastId);
+    if (d.emojis) MT.emojis = d.emojis;
+    const prev = MT.st && MT.st.id;
+    MT.st = d.meeting;
+    if (MT.st && MT.st.id !== prev) { MT.entries = []; MT.lastId = 0; MT.seen.clear(); if (MT.st.entries[0]?.id !== 1) { MT.polling = false; return mtPoll(); } }
+    if (MT.st) { for (const e of MT.st.entries) mtOnEntry(e); MT.lastId = MT.st.last_id; }
+    $("main").classList.toggle("meeting-live", S.view === "meet" && mtLive());
+    if (S.view === "meet") renderMeeting();
+  } catch {} finally { MT.polling = false; }
+}
+function mtOnEntry(e) {
+  if (MT.seen.has(e.id)) return; MT.seen.add(e.id); MT.entries.push(e);
+  if (e.kind === "reaction") floatReaction(e.speaker, e.text);
+  if (e.kind === "speech" && e.speaker !== "you") {
+    if (MT.voiceOn && "speechSynthesis" in window) { mtEnqueue(e); }
+    else { MT.fakeSpeak = { [e.speaker]: Date.now() + Math.min(9000, 1200 + e.text.split(/\s+/).length * 260) }; MT.caption = e; }
+    if (document.hidden && S.view === "meet") notify(`${nameOf(e.speaker)} said`, e.text.slice(0, 120));
+  }
+  if (e.kind === "hand" && e.speaker !== "you" && S.notify && MT.voiceOn === false) beep();
+}
+/* speech queue: split into sentences (Chrome cuts long utterances) */
+function mtEnqueue(e) {
+  const parts = e.text.match(/[^.!?]+[.!?]+["')]*|\S[^.!?]*$/g) || [e.text];
+  parts.forEach((p, i) => MT.queue.push({ e, text: p.trim(), last: i === parts.length - 1 }));
+  mtPlay();
+}
+function mtPlay() {
+  if (!MT.voiceOn || speechSynthesis.speaking || MT.speakingItem) return;
+  const item = MT.queue.shift();
+  if (!item) { MT.speaking = null; mtResumeMic(); renderMeeting(); return; }
+  const v = voiceFor(item.e.speaker);
+  const u = new SpeechSynthesisUtterance(item.text);
+  if (v.voice) u.voice = v.voice; u.pitch = v.pitch; u.rate = v.rate;
+  MT.speakingItem = item; MT.speaking = item.e.speaker; MT.caption = item.e; mtPauseMic(); renderMeeting();
+  const done = () => { if (MT.speakingItem !== item) return; MT.speakingItem = null; if (item.last) MT.speaking = null; setTimeout(mtPlay, item.last ? 250 : 0); };
+  u.onend = done; u.onerror = done;
+  speechSynthesis.speak(u);
+  setTimeout(() => { if (MT.speakingItem === item && !speechSynthesis.speaking) done(); }, 1500 + item.text.length * 120);
+}
+function mtSkip() {
+  const cur = MT.speakingItem?.e?.id;
+  if (cur) MT.queue = MT.queue.filter(q => q.e.id !== cur);
+  MT.speakingItem = null; MT.speaking = null; speechSynthesis.cancel(); setTimeout(mtPlay, 100);
+  const k = Object.keys(MT.fakeSpeak); k.forEach(x => delete MT.fakeSpeak[x]); renderMeeting();
+}
+function mtToggleVoice() {
+  MT.voiceOn = !MT.voiceOn; store.set("mtVoice", MT.voiceOn);
+  if (!MT.voiceOn) { MT.queue = []; MT.speakingItem = null; MT.speaking = null; speechSynthesis.cancel(); mtResumeMic(); }
+  toast(MT.voiceOn ? "🔊 Voices on: the team speaks out loud" : "🔇 Voices off: captions only"); renderMeeting();
+}
+/* microphone: auto-pauses while the team speaks so it doesn't hear them */
+function mtToggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return toast("Voice needs Chrome or Edge. You can type instead.");
+  MT.micOn = !MT.micOn;
+  if (MT.micOn) { mtStartRec(); toast("🎤 Mic on: just talk. It pauses automatically while the team speaks."); }
+  else { MT.rec?.abort(); MT.rec = null; MT.interim = ""; toast("Mic off"); }
+  renderMeeting();
+}
+function mtStartRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!MT.micOn || MT.rec || MT.speaking || speechSynthesis.speaking) return;
+  const r = new SR(); MT.rec = r; r.lang = navigator.language || "en-AU"; r.interimResults = true; r.continuous = false;
+  let finalText = "";
+  r.onresult = ev => { let inter = ""; for (const res of ev.results) { if (res.isFinal) finalText = res[0].transcript; else inter += res[0].transcript; }
+    MT.interim = finalText || inter; renderCaption(); };
+  r.onerror = ev => { if (ev.error === "not-allowed") { MT.micOn = false; toast("Microphone blocked. Allow it in the browser's address bar."); } };
+  r.onend = () => { MT.rec = null; const t = finalText.trim(); MT.interim = "";
+    if (t) mtSay(t);
+    if (MT.micOn && !MT.recPaused) setTimeout(mtStartRec, 250); renderMeeting(); };
+  try { r.start(); } catch { MT.rec = null; }
+}
+function mtPauseMic() { if (MT.rec) { MT.recPaused = true; MT.rec.abort(); MT.rec = null; } else MT.recPaused = true; }
+function mtResumeMic() { if (MT.recPaused) { MT.recPaused = false; if (MT.micOn) setTimeout(mtStartRec, 300); } }
+
+async function mtAct(action, body = {}) { try { await api("/api/meeting/" + action, body); await mtPoll(); } catch (e) { toast(e.message); } }
+function mtSay(text) { text = (text || "").trim(); if (!text) return; if (MT.speaking) mtSkip(); mtAct("say", { text }); }
+function mtSend(ev) { ev && ev.preventDefault(); const i = $("mtInput"); const t = i.value; i.value = ""; mtSay(t); }
+function mtReact(emoji) { $("mtPop")?.remove(); floatReaction("you", emoji); mtAct("react", { emoji }); }
+function floatReaction(key, emoji) {
+  const tile = document.querySelector(`.tile[data-k="${key}"]`); if (!tile) return;
+  const el = document.createElement("div"); el.className = "floatr"; el.textContent = emoji; el.style.marginLeft = (Math.random() * 40 - 20) + "px";
+  tile.appendChild(el); setTimeout(() => el.remove(), 2300);
+}
+function mtReactMenu(btn) {
+  if ($("mtPop")) return $("mtPop").remove();
+  const p = document.createElement("div"); p.className = "popover"; p.id = "mtPop";
+  p.innerHTML = MT.emojis.map(e => `<button onclick="mtReact('${e}')" aria-label="React ${e}">${e}</button>`).join("");
+  btn.parentElement.style.position = "relative"; btn.parentElement.appendChild(p);
+}
+
+/* ---------- rendering ---------- */
+function renderMeeting() {
+  const box = $("meetView");
+  if (!mtLive() && !(MT.st && MT.st.status === "ended")) { if (!box.querySelector(".lobby")) renderLobby(); return; }
+  if (MT.st.status === "ended") { if (!box.querySelector(".ended")) renderEnded(); return; }
+  if (!box.querySelector(".mt")) {
+    box.innerHTML = `<div class="mt"><div class="mt-stage">
+        <div class="mt-top"><span class="livedot">LIVE</span><div class="grow"><div class="ttl" id="mtTitle"></div></div><span class="nums" id="mtNums"></span></div>
+        <div class="tiles" id="mtTiles"></div>
+        <div class="caption idle" id="mtCaption"></div>
+        <div class="mt-controls" id="mtControls"></div>
+        <form class="mt-say" onsubmit="mtSend(event)"><input id="mtInput" placeholder="Say something to the team… (use @name to ask someone directly)" autocomplete="off" aria-label="Say something">
+          <button class="primary">Say</button></form></div>
+      <div class="mt-side"><div class="tabs"><button id="mtTabT" onclick="mtTab('transcript')">Transcript</button><button id="mtTabA" onclick="mtTab('agenda')">Agenda</button><button id="mtTabP" onclick="mtTab('people')">People</button></div>
+        <div class="pane" id="mtPane"></div></div></div>`;
+    MT.paneSig = "";
+  }
+  const st = MT.st;
+  $("mtTitle").textContent = st.title;
+  $("mtNums").textContent = `⏱ ${dur(nowS() - st.started)} · ${money(st.cost)}${st.status === "wrapping" ? " · writing notes…" : ""}`;
+  renderTiles(); renderCaption(); renderControls(); renderMtPane();
+}
+function tileState(k) {
+  const st = MT.st, speaking = MT.speaking === k || (MT.fakeSpeak[k] || 0) > Date.now();
+  if (k === "you") return { cls: st.you_hand ? "hand" : "", line: st.you_hand ? "✋ Hand raised" : MT.micOn ? (MT.recPaused ? "🎤 Mic paused while others talk" : "🎤 Listening…") : "Mic off · type below" };
+  const hand = st.hands.indexOf(k), muted = st.muted.includes(k);
+  if (speaking) return { cls: "speaking", line: `<span class="bars"><i></i><i></i><i></i><i></i></span>Speaking` };
+  if (st.thinking === k) return { cls: "thinking", line: esc(doingLabel(st.doing) || "Thinking…") };
+  if (muted) return { cls: "muted", line: "Muted" };
+  if (hand >= 0) return { cls: "hand", line: esc(st.hand_why[k] || "Wants to speak"), hand: hand + 1 };
+  return { cls: "", line: "Listening" };
+}
+function renderTiles() {
+  const st = MT.st, keys = ["you", ...st.attendees];
+  const sig = keys.map(k => { const t = tileState(k); return k + t.cls + t.line + (t.hand || ""); }).join("|") + st.muted.join();
+  if (sig === MT.tileSig) return; MT.tileSig = sig;
+  const keepFloats = {}; document.querySelectorAll(".tile").forEach(t => keepFloats[t.dataset.k] = [...t.querySelectorAll(".floatr")]);
+  $("mtTiles").innerHTML = keys.map(k => { const t = tileState(k), m = member(k) || {}, muted = st.muted.includes(k);
+    return `<div class="tile ${t.cls}" data-k="${k}">
+      ${t.hand ? `<span class="handb" title="Position in the queue">✋ ${t.hand}</span>` : muted ? `<span class="mutedb">🔇</span>` : ""}
+      ${k !== "you" ? `<div class="tmenu"><button onclick="mtAct('mute',{key:'${k}',muted:${!muted}})" title="${muted ? "Unmute" : "Mute: they won't speak"}">${muted ? "🔈" : "🔇"}</button>
+        <button onclick="openProfile('${k}')" title="Profile">ⓘ</button><button onclick="mtAct('remove',{key:'${k}'})" title="Remove from meeting">✕</button></div>` : ""}
+      <div class="big">${k === "you" ? "👤" : iconOf(k)}</div>
+      <div class="pn">${k === "you" ? "You" : esc(m.person || m.name)}</div><div class="pt">${k === "you" ? "Host" : esc(m.person ? m.name : roleOf(k))}</div>
+      <div class="ps">${t.line}</div>
+      ${t.hand ? `<button class="callon" onclick="mtAct('call_on',{key:'${k}'})">Call on ${esc(m.person || "them")}</button> <button class="callon" onclick="mtAct('lower',{key:'${k}'})" title="Lower their hand">↓</button>` : ""}
+      ${k !== "you" && t.cls === "" && !muted && !st.hands.length && st.status === "live" ? `<button class="callon" onclick="mtAct('call_on',{key:'${k}'})">Ask ${esc(m.person || "them")}</button>` : ""}
+    </div>`; }).join("");
+  for (const [k, els] of Object.entries(keepFloats)) { const t = document.querySelector(`.tile[data-k="${k}"]`); if (t) els.forEach(e => t.appendChild(e)); }
+}
+function renderCaption() {
+  const c = $("mtCaption"); if (!c) return;
+  if (MT.interim) { c.className = "caption"; c.innerHTML = `<b>You:</b> ${esc(MT.interim)}…`; return; }
+  const e = MT.caption, live = e && (MT.speaking === e.speaker || (MT.fakeSpeak[e.speaker] || 0) > Date.now());
+  if (live) { c.className = "caption"; c.innerHTML = `<b>${esc(nameOf(e.speaker))}:</b> ${esc(e.text)}`; return; }
+  const st = MT.st;
+  c.className = "caption idle";
+  c.textContent = st.thinking ? `${nameOf(st.thinking)} is getting ready to speak…` : st.hold ? "You're holding the floor. Nobody will speak until you do."
+    : st.you_hand ? "Your hand is up. The team is waiting for you." : st.hands.length ? `Next up: ${st.hands.map(nameOf).join(", ")}`
+    : "Live captions appear here. Say something, ask “@name” a question, or try “Go around the room”.";
+}
+function renderControls() {
+  const st = MT.st, cur = st.current >= 0 && st.agenda[st.current];
+  const html = `
+    <button class="cbtn ${MT.micOn ? "mic-on" : ""}" onclick="mtToggleMic()" title="Mic (M)"><span class="e">${MT.micOn ? "🎤" : "🎙️"}</span>${MT.micOn ? "Mic on" : "Mic off"}</button>
+    <button class="cbtn ${st.you_hand ? "hand-on" : ""}" onclick="mtAct('hand',{raised:${!st.you_hand}})" title="Raise hand (H)"><span class="e">✋</span>${st.you_hand ? "Lower hand" : "Raise hand"}</button>
+    <span style="position:relative"><button class="cbtn" onclick="mtReactMenu(this)" title="React"><span class="e">😀</span>React</button></span>
+    <button class="cbtn ${MT.voiceOn ? "on" : ""}" onclick="mtToggleVoice()" title="Voices"><span class="e">${MT.voiceOn ? "🔊" : "🔇"}</span>Voices</button>
+    <button class="cbtn" onclick="mtSkip()" title="Skip what's being said"><span class="e">⏭️</span>Skip</button>
+    <button class="cbtn ${st.hold ? "on" : ""}" onclick="mtAct('hold',{on:${!st.hold}})" title="Nobody speaks until you do"><span class="e">⏸️</span>${st.hold ? "Release" : "Hold floor"}</button>
+    <button class="cbtn" onclick="mtAct('around')" title="Everyone gives a quick update"><span class="e">🔁</span>Go around</button>
+    ${st.agenda.length ? `<button class="cbtn" onclick="mtAct('agenda',{action:'next'})" title="${cur ? "Now: " + esc(cur.text) : ""}"><span class="e">📋</span>Next item</button>` : ""}
+    <button class="cbtn" onclick="mtInvite(this)" title="Invite someone"><span class="e">➕</span>Invite</button>
+    <button class="cbtn wrap" onclick="mtWrap()" ${st.status !== "live" ? "disabled" : ""} title="Write notes and action items"><span class="e">📝</span>Wrap up</button>
+    <button class="cbtn end" onclick="mtEnd()" title="End without notes"><span class="e">📞</span>End</button>`;
+  if (html !== MT.ctlSig) { $("mtControls").innerHTML = html; MT.ctlSig = html; }
+}
+function mtInvite(btn) {
+  const out = S.team.filter(m => m.enabled && !MT.st.attendees.includes(m.key));
+  if (!out.length) return toast("Everyone who's switched on is already here");
+  if ($("mtPop")) return $("mtPop").remove();
+  const p = document.createElement("div"); p.className = "popover"; p.id = "mtPop"; p.style.flexDirection = "column";
+  p.innerHTML = out.map(m => `<button style="font-size:14px;text-align:left" onclick="$('mtPop').remove();mtAct('invite',{key:'${m.key}'})">${iconOf(m.key)} ${esc(m.person || m.name)}</button>`).join("");
+  btn.style.position = "relative"; btn.parentElement.style.position = "relative"; btn.parentElement.appendChild(p);
+}
+function mtTab(t) { MT.tab = t; MT.paneSig = ""; renderMtPane(); }
+function renderMtPane() {
+  const st = MT.st; if (!$("mtPane")) return;
+  ["T", "A", "P"].forEach(x => $("mtTab" + x).classList.toggle("on", { T: "transcript", A: "agenda", P: "people" }[x] === MT.tab));
+  let html;
+  if (MT.tab === "transcript") {
+    html = MT.entries.map(e => {
+      const t = new Date(e.ts * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      if (e.kind === "system") return `<div class="tline sys">${esc(e.text)}</div>`;
+      if (e.kind === "hand") return `<div class="tline small">✋ ${esc(nameOf(e.speaker))} ${e.speaker === "you" ? esc(e.text) : "raised a hand: " + esc(e.text)}</div>`;
+      if (e.kind === "reaction") return `<div class="tline small">${esc(e.text)} ${esc(nameOf(e.speaker))} reacted</div>`;
+      return `<div class="tline"><span class="ic">${e.speaker === "you" ? "👤" : iconOf(e.speaker)}</span><span class="tx"><span class="who">${esc(nameOf(e.speaker))}</span><span class="tm">${t}</span><br>${esc(e.text)}</span></div>`;
+    }).join("") || `<div class="muted" style="font-size:13px">The conversation appears here.</div>`;
+  } else if (MT.tab === "agenda") {
+    html = (st.agenda.length ? st.agenda.map((a, i) => `<div class="ag ${i === st.current ? "cur" : ""} ${a.done ? "done" : ""}">
+        <input type="checkbox" ${a.done ? "checked" : ""} onclick="event.stopPropagation();mtAct('agenda',{action:'toggle',index:${i}})" aria-label="Done">
+        <span class="t" onclick="mtAct('agenda',{action:'goto',index:${i}})">${i + 1}. ${esc(a.text)}</span></div>`).join("") : `<div class="muted" style="font-size:13px">No agenda. Add items below.</div>`)
+      + `<form onsubmit="event.preventDefault();const i=$('agAdd');mtAct('agenda',{action:'add',text:i.value});i.value=''" style="display:flex;gap:6px;margin-top:10px">
+         <input id="agAdd" placeholder="Add an agenda item" style="flex:1;font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text)"><button>Add</button></form>`;
+  } else {
+    html = ["you", ...st.attendees].map(k => { const m = member(k) || {}; const t = tileState(k);
+      return `<div class="row"><span>${k === "you" ? "👤 You (host)" : iconOf(k) + " " + esc(m.person || m.name) + ` <span class="muted" style="font-size:12px">${esc(m.person ? m.name : "")}</span>`}</span><span class="muted" style="font-size:12px">${t.line.replace(/<[^>]+>/g, "")}</span></div>`; }).join("");
+  }
+  const sig = MT.tab + html;
+  if (sig === MT.paneSig) return;
+  const pane = $("mtPane"), atBottom = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 60;
+  if (MT.tab === "agenda" && document.activeElement?.id === "agAdd") return;
+  pane.innerHTML = html; MT.paneSig = sig; if (MT.tab === "transcript" && atBottom) pane.scrollTop = pane.scrollHeight;
+}
+async function mtWrap() { if (!confirm("Wrap up the meeting? I'll write the notes and put action items on the task board.")) return; mtAct("wrap"); }
+async function mtEnd() { if (!confirm("End the meeting without writing notes? (Use Wrap up to get notes and action items.)")) return; MT.queue = []; speechSynthesis.cancel(); mtAct("end"); }
+
+function renderLobby() {
+  const box = $("meetView");
+  box.innerHTML = `<div class="lobby">
+    <div class="card"><h3>🎙️ Start a team meeting</h3><div class="muted" style="font-size:14px">Everyone sits in one room. Talk or type, they raise hands, react, answer out loud, and check real data while they're at it.</div>
+      <span class="fl" style="font-size:13px;font-weight:600;margin:14px 0 6px;display:block">Templates</span>
+      <div class="tpls">${MTEMPLATES.map((t, i) => `<button onclick="mtTemplate(${i})">${t.label}</button>`).join("")}</div>
+      <div class="form"><span class="fl">Meeting title</span><input type="text" id="mtT" value="Team meeting" maxlength="80">
+      <span class="fl">Agenda <span class="muted" style="font-weight:400">(one item per line, optional)</span></span><textarea id="mtA" style="min-height:90px" placeholder="e.g.&#10;Updates&#10;This week's priorities"></textarea>
+      <span class="fl">Who's invited</span><div class="inv">${S.team.map(m => `<label class="${m.enabled ? "" : "dis"}" title="${m.enabled ? "" : "Switched off"}">
+        <input type="checkbox" value="${m.key}" ${m.enabled ? "checked" : "disabled"}> <span style="font-size:20px">${iconOf(m.key)}</span>
+        <span><b>${esc(m.person || m.name)}</b><br><span class="muted" style="font-size:12px">${esc(m.person ? m.name : roleOf(m.key))}</span></span></label>`).join("")}</div>
+      <div class="ferr" id="mtErr"></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button class="primary" style="padding:10px 18px;font-size:15px" onclick="mtStart()">🎙️ Start meeting</button>
+        <span class="muted" style="font-size:13px">Tip: use Chrome or Edge for voices and the microphone.</span></div></div></div>
+    <div class="card"><h3>📚 Past meetings</h3><div id="mtPast" class="muted" style="font-size:14px">Loading…</div></div></div>`;
+  api("/api/meetings").then(list => { $("mtPast").innerHTML = list.length ? list.map(m => `<div class="past"><span class="icons">${m.attendees.map(a => a.icon).join("")}</span>
+      <div class="grow"><b>${esc(m.title)}</b><br><span class="muted" style="font-size:12px">${new Date(m.started * 1000).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+        · ${m.ended ? dur(m.ended - m.started) : "unfinished"} · ${money(m.cost)}</span></div>
+      <button onclick="mtShowPast('${m.id}')">${m.has_minutes ? "📝 Notes" : "Transcript"}</button></div>`).join("") : "No meetings yet."; }).catch(() => {});
+}
+function mtTemplate(i) { const t = MTEMPLATES[i]; $("mtT").value = t.title; $("mtA").value = t.agenda.join("\n"); }
+async function mtStart() {
+  const attendees = [...document.querySelectorAll(".inv input:checked")].map(c => c.value);
+  if (!attendees.length) { $("mtErr").textContent = "Invite at least one person."; return; }
+  if ("speechSynthesis" in window) speechSynthesis.getVoices();
+  try { await api("/api/meeting/start", { title: $("mtT").value, agenda: $("mtA").value.split("\n"), attendees });
+    MT.entries = []; MT.lastId = 0; MT.seen.clear(); MT.queue = []; MT.caption = null; await mtPoll();
+    toast("🎙️ Meeting started. Say hello!"); setTimeout(() => $("mtInput")?.focus(), 100); } catch (e) { $("mtErr").textContent = e.message; }
+}
+function minutesHTML(m) {
+  if (!m) return `<div class="muted">No notes were written for this meeting.</div>`;
+  const li = a => (a && a.length ? `<ul>${a.map(x => `<li>${esc(typeof x === "string" ? x : x.task + (x.owner ? ` · ${x.owner === "you" ? "You" : nameOf(x.owner)}` : "") + (x.due ? ` · due ${x.due}` : ""))}</li>`).join("")}</ul>` : `<div class="muted">None</div>`);
+  return `<div class="minutes"><h4>Summary</h4><div>${esc(m.summary || "")}</div><h4>Decisions</h4>${li(m.decisions)}<h4>Action items</h4>${li(m.action_items)}
+    <h4>Open questions</h4>${li(m.open_questions)}</div>`;
+}
+function renderEnded() {
+  const st = MT.st;
+  $("main").classList.remove("meeting-live");
+  $("meetView").innerHTML = `<div class="lobby ended"><div class="card"><h3>✅ ${esc(st.title)}: meeting ended</h3>
+    <div class="muted" style="font-size:13px">${dur((st.ended || nowS()) - st.started)} · ${money(st.cost)}${st.minutes ? " · action items are on the task board" : ""}</div>
+    ${minutesHTML(st.minutes)}
+    <div style="display:flex;gap:8px;margin-top:16px"><button onclick="copyMinutes()">Copy notes</button><button class="primary" onclick="mtClose()">Back to the lobby</button>
+      <button onclick="sideTab('tasks');$('main').classList.remove('meeting-live')">Open task board</button></div></div></div>`;
+}
+function copyMinutes() { const m = MT.st.minutes || {}; const txt = `${MT.st.title}\n\nSummary: ${m.summary || ""}\n\nDecisions:\n${(m.decisions || []).map(d => "- " + d).join("\n")}\n\nAction items:\n${(m.action_items || []).map(a => `- ${a.task} (${a.owner === "you" ? "You" : nameOf(a.owner)}${a.due ? ", due " + a.due : ""})`).join("\n")}`;
+  navigator.clipboard.writeText(txt).then(() => toast("Notes copied"), () => toast("Couldn't copy")); }
+async function mtClose() { await api("/api/meeting/close", {}); MT.st = null; MT.entries = []; MT.lastId = 0; renderLobby(); }
+async function mtShowPast(id) {
+  const d = await api("/api/meetings/get?id=" + id);
+  modal(`📚 ${esc(d.title)}`, `<div class="muted" style="font-size:13px">${new Date(d.started * 1000).toLocaleString()} · ${d.attendees.map(a => a.icon + " " + esc(a.name)).join(", ")}</div>
+    ${minutesHTML(d.minutes)}<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--muted)">Transcript</h4>
+    ${d.transcript.map(e => e.kind === "system" ? `<div class="tline sys">${esc(e.text)}</div>` : `<div class="tline"><span class="ic">${e.speaker === "you" ? "👤" : iconOf(e.speaker)}</span><span class="tx"><span class="who">${esc(nameOf(e.speaker))}</span><br>${esc(e.text)}</span></div>`).join("")}`);
+}
+setInterval(() => { if (S.view === "meet" || mtLive()) mtPoll(); }, 600);
+setInterval(() => { if (S.view === "meet" && mtLive()) { $("mtNums") && ($("mtNums").textContent = `⏱ ${dur(nowS() - MT.st.started)} · ${money(MT.st.cost)}${MT.st.status === "wrapping" ? " · writing notes…" : ""}`); renderTiles(); renderCaption(); } }, 500);
+
 /* input + keyboard */
 function autosize() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
 $("input").addEventListener("input", autosize);
@@ -1118,6 +1511,11 @@ document.addEventListener("keydown", e => {
   if (e.altKey && e.key.toLowerCase() === "m") { e.preventDefault(); setView("map"); }
   if (e.altKey && e.key.toLowerCase() === "c") { e.preventDefault(); setView("chat"); }
   if (e.altKey && e.key.toLowerCase() === "r") { e.preventDefault(); setView("rout"); }
+  if (e.altKey && e.key.toLowerCase() === "t") { e.preventDefault(); setView("meet"); }
+  if (!typing && S.view === "meet" && mtLive() && !e.altKey && !e.ctrlKey) {
+    if (e.key.toLowerCase() === "m") { e.preventDefault(); mtToggleMic(); }
+    if (e.key.toLowerCase() === "h") { e.preventDefault(); mtAct("hand", { raised: !MT.st.you_hand }); }
+  }
   if (!typing && e.key === "/") { e.preventDefault(); setView("chat"); $("input").focus(); }
   if (!typing && e.key === "?") { e.preventDefault(); openHelp(); }
 });

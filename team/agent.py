@@ -134,6 +134,12 @@ class Agent:
     role: str = ""                                           # one-line job description
     icon: str = ""                                           # emoji shown in the panel
     custom: bool = False                                     # made in the panel with the + button
+    person: str = ""                                         # their first name, e.g. "Olivia"
+    gender: str = ""                                         # "female" / "male": picks their voice
+
+    @property
+    def display(self) -> str:
+        return f"{self.person} ({self.name})" if self.person else self.name
 
     def __post_init__(self):
         self.set_team(self.team)
@@ -154,7 +160,7 @@ class Agent:
     def team_brief(self) -> str:
         if not self.team:
             return ""
-        lines = [f"- {k}: {a.name}, {a.role or 'team member'}" + ("" if is_enabled(k) else " (switched OFF)")
+        lines = [f"- {k}: {a.display}, {a.role or 'team member'}" + ("" if is_enabled(k) else " (switched OFF)")
                  for k, a in self.team.items()]
         return "\n\nYour team (hand work over with `delegate`; pick the best fit for each part):\n" + "\n".join(lines)
 
@@ -178,14 +184,15 @@ class Agent:
                   detail=result)
         return result
 
-    def run(self, task: str, history: list | None = None) -> str:
+    def run(self, task: str, history: list | None = None, label: str | None = None) -> str:
         if not is_enabled(self.key):
             return f"{self.name} is switched off."
         if not hasattr(_ctx, "stack"):
             begin_run(None)
         _ctx.stack.append(self.key)
-        set_status(self.key, "working", "Reading the request", task=task[:200])
-        log_event(self.name, f"started: {task[:200]}", "start", key=self.key, detail=task)
+        shown = label or task
+        set_status(self.key, "working", "Reading the request", task=shown[:200])
+        log_event(self.name, f"started: {shown[:200]}", "start", key=self.key, detail=shown)
         try:
             reply = self._loop(task, history)
             log_event(self.name, "finished", "done", key=self.key, detail=reply)
@@ -203,7 +210,9 @@ class Agent:
             _ctx.stack.pop()
 
     def _loop(self, task: str, history: list | None) -> str:
-        system = (self.instructions + (("\n\n" + self.extra_context()) if self.extra_context else "")
+        me = (f"Your name is {self.person}; you're the team's {self.name}. Colleagues and the owner call you "
+              f"{self.person}, and you call teammates by their first names.\n\n") if self.person else ""
+        system = (me + self.instructions + (("\n\n" + self.extra_context()) if self.extra_context else "")
                   + self.team_brief())
         system_blocks = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
         tool_specs = [t.spec() for t in self.tools] + self.server_tools

@@ -51,7 +51,7 @@ Always work on a new branch (e.g. junior/<short-name>), run the tests, commit, p
 Never merge. If a task is bigger or unclear, stop and say so instead of guessing.
 Report back: what you changed, the test result, and the PR number.""",
         tools=list(DEV_TOOLS) + MEMORY_TOOLS, extra_context=junior_context,
-        role="small coding tasks: fixes, tests, docs", icon="🌱",
+        role="small coding tasks: fixes, tests, docs", icon="🌱", person="Leo", gender="male",
     )
 
     senior = Agent(
@@ -65,7 +65,7 @@ Role: senior developer. You plan features, write the hard code and review the ju
 - Only call merge_pull_request when the work is reviewed and tests pass; the owner approves the merge.
 Report back: what was done, PR links, any risks.""",
         tools=list(DEV_TOOLS) + REVIEW_TOOLS + LESSON_TOOLS + MEMORY_TOOLS,
-        extra_context=now_context, role="plans and writes code, reviews pull requests", icon="🧑‍💻",
+        extra_context=now_context, role="plans and writes code, reviews pull requests", icon="🧑‍💻", person="James", gender="male",
     )
 
     assistant = Agent(
@@ -75,7 +75,7 @@ Role: projects and calendar assistant. You manage the owner's Apple Calendar, pr
 Check free slots before proposing times. Keep the project list up to date. When asked for a briefing,
 list today's events, upcoming deadlines (next 7 days) and overdue tasks.""",
         tools=CALENDAR_TOOLS + PROJECT_TOOLS + TASK_TOOLS + MEMORY_TOOLS, extra_context=now_context,
-        role="Apple Calendar, free time, projects and deadlines, briefings", icon="📅",
+        role="Apple Calendar, free time, projects and deadlines, briefings", icon="📅", person="Priya", gender="female",
     )
 
     travel = Agent(
@@ -87,7 +87,7 @@ calendar for clashes. Give 2-3 options with prices and links from your web searc
 recent each price is. You NEVER book or pay; you recommend and give booking links.""",
         tools=TRAVEL_MEMORY_TOOLS + MEMORY_TOOLS + [t for t in CALENDAR_TOOLS if t.name in ("list_events", "find_free_slots")],
         server_tools=[WEB_SEARCH], extra_context=now_context,
-        role="trips: flights, hotels, itineraries (never books)", icon="✈️",
+        role="trips: flights, hotels, itineraries (never books)", icon="✈️", person="Marco", gender="male",
     )
 
     web = Agent(
@@ -104,7 +104,7 @@ Role: web and content agent for {OWNER}'s WordPress site. You write and edit blo
 - When editing, wp_get first and send the complete updated content.
 - Report back briefly: what you made or changed, the preview link, and what needs {OWNER}'s approval.""",
         tools=WORDPRESS_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS, server_tools=[WEB_SEARCH], extra_context=now_context,
-        role="WordPress posts and pages, website content", icon="🌐",
+        role="WordPress posts and pages, website content", icon="🌐", person="Sophie", gender="female",
     )
 
     lead = Agent(
@@ -133,7 +133,7 @@ How you talk to {OWNER}:
 - At most ONE question per reply, and only if you truly cannot proceed without it.
 - When something failed: what happened, the cause, what you did or what {OWNER} needs to do. That's it.""",
         tools=TASK_TOOLS + PROJECT_TOOLS + MEMORY_TOOLS + OVERSIGHT_TOOLS + ROUTINE_TOOLS,
-        extra_context=now_context, max_turns=30, role="plans, delegates, checks and reports", icon="🧭",
+        extra_context=now_context, max_turns=30, role="plans, delegates, checks and reports", icon="🧭", person="Olivia", gender="female",
     )
     return {a.key: a for a in (lead, assistant, travel, web, senior, junior)}
 

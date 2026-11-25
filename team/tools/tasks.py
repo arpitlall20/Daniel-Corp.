@@ -83,7 +83,7 @@ def list_projects() -> str:
     return json.dumps(rows, indent=1) if rows else "No projects yet."
 
 
-OWNERS = {"type": "string", "description": "team_lead, assistant, travel, senior_dev or junior_dev"}
+OWNERS = {"type": "string", "description": "a team member key (e.g. team_lead, assistant, travel, web, senior_dev, junior_dev), or 'you' for the owner"}
 
 TASK_TOOLS = [
     Tool("add_task", "Add a task to the shared task board.",

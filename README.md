@@ -99,6 +99,26 @@ The header shows estimated spend **today / this month / all time**; click it (or
 breakdown by agent and by day. It's saved in `data/usage.json`, so it keeps counting across restarts.
 Set `MONTHLY_BUDGET_USD` in `.env` to get a warning. Exact balance: console.anthropic.com > Billing.
 
+## Team meetings 🎙️
+
+Open the **Meeting** tab, pick a template (stand-up, weekly planning, brainstorm, kickoff) or write
+an agenda, choose who's invited, and start.
+- **Talk** (🎤, Chrome/Edge; the mic pauses itself while the team speaks) or type. Use `@Marco` to ask someone directly.
+- Agents **raise hands** when they have something relevant (with a reason and queue number), **react** with
+  emojis, and **answer out loud in their own voices** with live captions. They can check real data (calendar,
+  tasks, web) while answering.
+- You can **raise your hand** (the team stops after the current speaker), **call on** anyone, lower hands,
+  **react**, **skip** a speaker, **hold the floor**, **go around the room**, move through the **agenda**, **invite**,
+  **mute** or **remove** people, and switch voices off for captions only. Shortcuts: `M` mic, `H` hand.
+- **Wrap up** writes a summary, decisions, open questions and action items. Action items go onto the task
+  board with owners. Past meetings (notes + transcript) are listed in the lobby.
+
+## Names and voices
+
+Olivia (Team Lead), Priya (Calendar), Marco (Travel), Sophie (Web & Content), James (Senior Dev) and Leo
+(Junior Dev). Rename anyone or switch their voice in their profile (🔊 previews it). New members get a
+name and voice when you add them.
+
 ## Routines (scheduled jobs)
 
 Open the **⏰ Routines** tab, or just tell the Team Lead ("every weekday at 7:30, give me a briefing").

@@ -45,6 +45,7 @@ def _load() -> dict:
         d = {}
     d.setdefault("parents", {})
     d.setdefault("custom", {})
+    d.setdefault("people", {})
     return d
 
 
@@ -77,7 +78,8 @@ Work within the abilities you have. If a request needs something you can't do, s
 suggest who in the team could. Report back briefly: what you did, what you found, what needs approval."""
     return Agent(key=spec["key"], name=spec["name"], model=config.model_for(spec["key"]), instructions=instructions,
                  tools=unique, server_tools=server, extra_context=now_context, role=spec.get("role", ""),
-                 icon=spec.get("icon", "🙂"), custom=True)
+                 icon=spec.get("icon", "🙂"), custom=True, person=spec.get("person", ""),
+                 gender=spec.get("gender", ""))
 
 
 def parents() -> dict[str, str]:
@@ -110,10 +112,30 @@ def build_all() -> dict[str, Agent]:
         for key, spec in _load()["custom"].items():
             config.ensure_agent(key, spec.get("model", "claude-sonnet-5-5"))
             agents[key] = _custom_agent(spec)
+        for key, p in _load()["people"].items():   # names/voices you changed
+            if key in agents:
+                agents[key].person = p.get("person", agents[key].person)
+                agents[key].gender = p.get("gender", agents[key].gender)
         _agents.clear()
         _agents.update(agents)
         _wire()
         return _agents
+
+
+def set_person(key: str, person: str, gender: str) -> str:
+    with _lock:
+        if key not in _agents:
+            raise ValueError("Unknown team member.")
+        person = person.strip()[:24]
+        gender = gender if gender in ("female", "male") else ""
+        d = _load()
+        d["people"][key] = {"person": person, "gender": gender}
+        if key in d["custom"]:
+            d["custom"][key].update({"person": person, "gender": gender})
+        _save(d)
+        _agents[key].person, _agents[key].gender = person, gender
+        _wire()
+        return f"{_agents[key].name} is now {person or 'unnamed'}" + (f" ({gender} voice)" if gender else "") + "."
 
 
 def current() -> dict[str, Agent]:
@@ -172,6 +194,8 @@ def _clean(spec: dict) -> dict:
         raise ValueError("Give your new team member a name.")
     model = spec.get("model") if spec.get("model") in MODELS else "claude-sonnet-5-5"
     return {"name": name, "icon": (spec.get("icon") or "🙂").strip()[:4], "role": (spec.get("role") or "").strip()[:80],
+            "person": (spec.get("person") or "").strip()[:24],
+            "gender": spec.get("gender") if spec.get("gender") in ("female", "male") else "",
             "instructions": (spec.get("instructions") or "").strip()[:4000], "model": model,
             "abilities": [a for a in spec.get("abilities", []) if a in ABILITIES]}
 
