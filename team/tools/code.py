@@ -13,8 +13,8 @@ from pathlib import Path
 from ..approvals import ask_approval
 from .base import I, S, Tool, schema
 
-SAFE_PREFIXES = ("pytest", "python -m pytest", "python -m unittest", "ruff", "git status", "git diff",
-                 "git log", "ls", "cat", "grep", "pip list")
+SAFE_PREFIXES = ("pytest", "python -m pytest", "py -m pytest", "python -m unittest", "ruff", "git status", "git diff",
+                 "git log", "ls", "dir", "cat", "type", "grep", "findstr", "pip list")
 
 
 def _repo() -> Path:
@@ -44,13 +44,13 @@ def list_files(path: str = ".") -> str:
 
 
 def read_file(path: str) -> str:
-    return _safe_path(path).read_text()[:20000]
+    return _safe_path(path).read_text(encoding="utf-8", errors="replace")[:20000]
 
 
 def write_file(path: str, content: str) -> str:
     p = _safe_path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(content)
+    p.write_text(content, encoding="utf-8")
     return f"Wrote {path} ({len(content)} chars)."
 
 

@@ -10,13 +10,13 @@ TRAVEL_PREFS = DATA / "travel_preferences.md"
 
 
 def read_text(path: Path) -> str:
-    return path.read_text() if path.exists() else ""
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def add_lesson(lesson: str) -> str:
     """Senior dev records a lesson; it's loaded into the junior's instructions every run."""
     DATA.mkdir(exist_ok=True)
-    with LESSONS.open("a") as f:
+    with LESSONS.open("a", encoding="utf-8") as f:
         f.write(f"- ({date.today()}) {lesson.strip()}\n")
     return "Lesson saved for the junior developer."
 
@@ -27,7 +27,7 @@ def read_travel_preferences() -> str:
 
 def update_travel_preferences(note: str) -> str:
     DATA.mkdir(exist_ok=True)
-    with TRAVEL_PREFS.open("a") as f:
+    with TRAVEL_PREFS.open("a", encoding="utf-8") as f:
         f.write(f"- {note.strip()}\n")
     return "Preference saved."
 

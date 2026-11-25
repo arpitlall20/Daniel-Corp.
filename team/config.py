@@ -18,11 +18,11 @@ DEFAULT = {
 def load() -> dict:
     if not CONFIG_PATH.exists():
         save(DEFAULT)
-    return json.loads(CONFIG_PATH.read_text())
+    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 
 
 def save(cfg: dict) -> None:
-    CONFIG_PATH.write_text(json.dumps(cfg, indent=2))
+    CONFIG_PATH.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
 
 
 def is_enabled(key: str) -> bool:

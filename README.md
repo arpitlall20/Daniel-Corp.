@@ -25,6 +25,19 @@ You
 5. `cp .env.example .env` and fill it in.
 6. Edit `data/travel_preferences.md` with your preferences.
 
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/arpitlall20/Daniel-Corp..git Daniel-Corp   # Windows can't have a folder ending in "."
+cd Daniel-Corp
+py -m venv .venv
+.venv\Scripts\Activate.ps1      # if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+pip install -r requirements.txt
+copy .env.example .env
+notepad .env
+python main.py
+```
+
 ## Use it
 
 ```bash
