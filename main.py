@@ -13,7 +13,7 @@ import sys
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)  # .env always wins over old Windows settings
 except ImportError:
     pass
 

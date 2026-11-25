@@ -23,8 +23,8 @@ def _cal():
 
         client = caldav.DAVClient(
             url="https://caldav.icloud.com",
-            username=os.environ["ICLOUD_EMAIL"],
-            password=os.environ["ICLOUD_APP_PASSWORD"],
+            username=os.environ["ICLOUD_EMAIL"].strip(),
+            password=os.environ["ICLOUD_APP_PASSWORD"].strip().strip("\"'"),
         )
         calendars = client.principal().calendars()
         wanted = os.getenv("ICLOUD_CALENDAR_NAME", "")
