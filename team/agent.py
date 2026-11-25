@@ -16,6 +16,13 @@ PRICES = {
 }
 WEB_SEARCH_PRICE = 0.01  # $10 per 1,000 searches
 COST_LOG: dict[str, float] = defaultdict(float)
+EVENTS: list[dict] = []  # live activity feed (shown in the web panel)
+
+
+def log_event(agent: str, text: str) -> None:
+    import time
+    EVENTS.append({"id": len(EVENTS) + 1, "time": time.strftime("%H:%M:%S"), "agent": agent, "text": text})
+    del EVENTS[:-500]
 
 _client = None
 
@@ -67,7 +74,10 @@ class Agent:
         if not is_enabled(member):
             return f"{member} is switched OFF by the owner. Tell the owner, or handle it another way."
         print(f"  -> {self.name} delegates to {self.team[member].name}: {task[:90]}")
-        return self.team[member].run(task)
+        log_event(self.name, f"delegated to {self.team[member].name}: {task[:140]}")
+        result = self.team[member].run(task)
+        log_event(self.team[member].name, f"reported back to {self.name}")
+        return result
 
     def run(self, task: str, history: list | None = None) -> str:
         if not is_enabled(self.key):
@@ -84,6 +94,9 @@ class Agent:
                                             messages=messages, **kwargs)
             COST_LOG[self.name] += _cost(self.model, resp.usage)
             messages.append({"role": "assistant", "content": resp.content})
+            for block in resp.content:
+                if block.type == "server_tool_use":
+                    log_event(self.name, f"web search: {block.input.get('query', '')}")
 
             if resp.stop_reason == "tool_use":
                 results = []
@@ -91,6 +104,8 @@ class Agent:
                     if block.type == "tool_use":
                         if os.getenv("VERBOSE") == "1":
                             print(f"    [{self.name}] {block.name}({str(block.input)[:120]})")
+                        if block.name != "delegate":
+                            log_event(self.name, f"using {block.name}")
                         tool = tools_by_name.get(block.name)
                         out = tool.run(**block.input) if tool else f"Unknown tool {block.name}"
                         results.append({"type": "tool_result", "tool_use_id": block.id, "content": out})

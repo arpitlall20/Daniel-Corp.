@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daniel Corp · AI Team</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%234f46c8%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-size=%2216%22 font-family=%22sans-serif%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22%3EDC%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --line: #e4e2da; --text: #1f1e1b; --muted: #75736b;
+    --accent: #4f46c8; --accent-soft: #eceafd; --ok: #1d9e75; --ok-soft: #e1f5ee;
+    --warn: #b45f06; --warn-soft: #fdf1de; --danger: #c2392f; --you: #1f1e1b; --you-text: #fff;
+    --radius: 12px; --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161614; --panel: #1f1f1c; --line: #34332e; --text: #ecebe5; --muted: #9c9a92;
+      --accent: #9d97f0; --accent-soft: #2b2850; --ok: #5dcaa5; --ok-soft: #0f2e25;
+      --warn: #f0a94b; --warn-soft: #3a2a10; --you: #ecebe5; --you-text: #161614; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px;
+    border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 18px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  .cost { font-size: 13px; color: var(--muted); }
+  .cost b { color: var(--text); font-weight: 600; }
+  main { display: grid; grid-template-columns: 290px 1fr 320px; height: calc(100vh - 57px); }
+  aside, section { overflow-y: auto; }
+  aside.team { border-right: 1px solid var(--line); padding: 18px 14px; background: var(--panel); }
+  aside.side { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 4px 8px 10px; }
+  .member { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; cursor: pointer;
+    border: 1px solid transparent; margin-bottom: 4px; transition: background .15s; }
+  .member:hover { background: var(--bg); }
+  .member.active { background: var(--accent-soft); border-color: var(--accent); }
+  .member.off { opacity: .55; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    font-size: 13px; font-weight: 600; background: var(--accent-soft); color: var(--accent); position: relative; }
+  .avatar .dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%;
+    border: 2px solid var(--panel); background: var(--muted); }
+  .avatar .dot.on { background: var(--ok); }
+  .avatar .dot.busy { background: var(--warn); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .who { flex: 1; min-width: 0; }
+  .who .n { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who .m { font-size: 12px; color: var(--muted); }
+  .indent-1 { margin-left: 18px; } .indent-2 { margin-left: 36px; }
+  .switch { position: relative; width: 36px; height: 20px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: var(--line); border-radius: 20px; transition: .2s; cursor: pointer; }
+  .switch span::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px;
+    background: #fff; border-radius: 50%; transition: .2s; }
+  .switch input:checked + span { background: var(--ok); }
+  .switch input:checked + span::before { transform: translateX(16px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .bulk { display: flex; gap: 8px; margin: 14px 8px 0; }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+    color: var(--text); padding: 7px 12px; font-size: 13px; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:disabled { opacity: .5; cursor: default; }
+  .chat { display: flex; flex-direction: column; min-width: 0; }
+  .chat-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-bottom: 1px solid var(--line); }
+  .chat-head .t { font-weight: 600; } .chat-head .s { font-size: 13px; color: var(--muted); }
+  .messages { flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 78%; padding: 11px 15px; border-radius: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+  .msg.you { align-self: flex-end; background: var(--you); color: var(--you-text); border-bottom-right-radius: 4px; white-space: pre-wrap; }
+  .msg.agent { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .msg.agent p { margin: 0 0 8px; } .msg.agent p:last-child { margin-bottom: 0; }
+  .msg.agent ul { margin: 4px 0 8px; padding-left: 20px; }
+  .msg.agent h3, .msg.agent h4 { margin: 10px 0 6px; font-size: 15px; }
+  .msg.agent code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .msg.agent pre { background: var(--bg); padding: 10px; border-radius: 8px; overflow-x: auto; }
+  .msg.agent pre code { padding: 0; }
+  .msg.agent a { color: var(--accent); }
+  .msg.agent table { border-collapse: collapse; margin: 6px 0; font-size: 14px; }
+  .msg.agent td, .msg.agent th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+  .thinking { align-self: flex-start; font-size: 13px; color: var(--muted); padding: 4px 2px; }
+  .thinking .live { display: block; margin-top: 3px; }
+  .empty { margin: auto; text-align: center; color: var(--muted); max-width: 380px; line-height: 1.6; }
+  .empty .big { font-size: 17px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+  .suggest { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+  .suggest button { border-radius: 20px; }
+  .composer { display: flex; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--panel); }
+  textarea { flex: 1; resize: none; font: inherit; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); min-height: 44px; max-height: 160px; }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  .approvals { padding: 0 22px; }
+  .approval { margin-top: 14px; border: 1px solid var(--warn); background: var(--warn-soft); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; gap: 14px; align-items: center; }
+  .approval .a { flex: 1; } .approval .h { font-weight: 600; color: var(--warn); font-size: 13px; margin-bottom: 3px; }
+  .approval button.yes { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tabs button { flex: 1; border: 0; border-radius: 0; padding: 13px; background: none; color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .pane { flex: 1; overflow-y: auto; padding: 14px 16px; }
+  .ev { font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
+  .ev .tm { color: var(--muted); font-size: 11px; } .ev b { font-weight: 600; }
+  .task { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+  .task .tt { font-weight: 600; margin-bottom: 4px; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--bg); color: var(--muted); margin-right: 4px; }
+  .pill.done { background: var(--ok-soft); color: var(--ok); } .pill.doing, .pill.review { background: var(--accent-soft); color: var(--accent); }
+  .pill.blocked { background: var(--warn-soft); color: var(--warn); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (max-width: 1100px) { main { grid-template-columns: 250px 1fr; } aside.side { display: none; } }
+  @media (max-width: 720px) { main { grid-template-columns: 1fr; height: auto; } aside.team { border-right: 0; border-bottom: 1px solid var(--line); }
+    .chat { height: 80vh; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Daniel Corp <span>· AI team</span></h1>
+  <div class="cost">This session: <b id="total">$0.0000</b> USD</div>
+</header>
+<main>
+  <aside class="team">
+    <div class="label">Your team</div>
+    <div id="members"></div>
+    <div class="bulk">
+      <button onclick="bulk(true)">All on</button>
+      <button onclick="bulk(false)">All off</button>
+    </div>
+  </aside>
+
+  <section class="chat">
+    <div class="chat-head">
+      <div><div class="t" id="chatName">Team Lead</div><div class="s" id="chatSub"></div></div>
+      <button onclick="resetChat()" title="Start a fresh conversation with this member">New chat</button>
+    </div>
+    <div class="approvals" id="approvals" aria-live="assertive"></div>
+    <div class="messages" id="messages" aria-live="polite"></div>
+    <form class="composer" onsubmit="send(event)">
+      <label class="sr" for="input">Message</label>
+      <textarea id="input" rows="1" placeholder="Message the team lead…"></textarea>
+      <button class="primary" id="sendBtn" type="submit">Send</button>
+    </form>
+  </section>
+
+  <aside class="side">
+    <div class="tabs">
+      <button class="on" id="tabAct" onclick="tab('act')">Activity</button>
+      <button id="tabTasks" onclick="tab('tasks')">Task board</button>
+    </div>
+    <div class="pane" id="activity"></div>
+    <div class="pane" id="tasks" hidden></div>
+  </aside>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const ROLE = { team_lead: "Plans, delegates, reports", assistant: "Calendar & projects",
+  travel: "Flights, hotels, itineraries", senior_dev: "Designs, codes, reviews", junior_dev: "Small tasks, learning" };
+const SUGGEST = {
+  team_lead: ["What's on my plate this week?", "Plan a Sydney trip next month and block the time"],
+  assistant: ["What's on my calendar this week?", "Add a project called Daniel Corp, due 31 December"],
+  travel: ["Plan a weekend on the Gold Coast, budget $800", "Cheapest flights BNE to Melbourne next Friday"],
+  senior_dev: ["Review the open pull requests", "Plan the structure for a new feature"],
+  junior_dev: ["Add tests for the login function", "Fix typos in the README"],
+};
+let team = [], current = "team_lead", lastEvent = 0, sending = false, liveLines = [];
+
+const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function md(src) {
+  const blocks = [];
+  let s = esc(src).replace(/```[\w-]*\n?([\s\S]*?)```/g, (_, c) => { blocks.push(c); return `\u0000${blocks.length - 1}\u0000`; });
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>")
+       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+       .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  const out = []; let list = null, table = null;
+  const flush = () => { if (list) { out.push("<ul>" + list.join("") + "</ul>"); list = null; }
+                        if (table) { out.push("<table>" + table.join("") + "</table>"); table = null; } };
+  for (const line of s.split("\n")) {
+    const t = line.trim();
+    if (/^[-*] /.test(t)) { if (table) flush(); (list ||= []).push("<li>" + t.slice(2) + "</li>"); continue; }
+    if (/^\|.*\|$/.test(t)) { if (list) flush(); if (/^\|[\s:|-]+\|$/.test(t)) continue;
+      (table ||= []).push("<tr>" + t.slice(1, -1).split("|").map(c => `<td>${c.trim()}</td>`).join("") + "</tr>"); continue; }
+    flush();
+    if (/^#{1,6} /.test(t)) out.push("<h4>" + t.replace(/^#+ /, "") + "</h4>");
+    else if (t) out.push("<p>" + t + "</p>");
+  }
+  flush();
+  return out.join("").replace(/\u0000(\d+)\u0000/g, (_, i) => `<pre><code>${blocks[i]}</code></pre>`);
+}
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
+
+function depth(m) { let d = 0, k = m.reports_to; while (k && k !== "you") { d++; k = (team.find(x => x.key === k) || {}).reports_to; } return d; }
+const initials = n => n.split(/[\s&]+/).filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+function renderTeam() {
+  $("members").innerHTML = team.map(m => `
+    <div class="member indent-${Math.min(depth(m), 2)} ${m.key === current ? "active" : ""} ${m.enabled ? "" : "off"}"
+         onclick="pick('${m.key}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')pick('${m.key}')">
+      <div class="avatar">${initials(m.name)}<span class="dot ${m.busy ? "busy" : m.enabled ? "on" : ""}"></span></div>
+      <div class="who"><div class="n">${esc(m.name)}</div><div class="m">${m.busy ? "Working…" : (ROLE[m.key] || m.model)}</div></div>
+      <label class="switch" onclick="event.stopPropagation()" title="${m.enabled ? "Switch off" : "Switch on"}">
+        <input type="checkbox" ${m.enabled ? "checked" : ""} aria-label="${esc(m.name)} on/off" onchange="toggle('${m.key}', this.checked)">
+        <span></span></label>
+    </div>`).join("");
+  const m = team.find(x => x.key === current);
+  if (m) {
+    $("chatName").textContent = m.name;
+    $("chatSub").textContent = `${m.enabled ? "On" : "Off — switch on to chat"} · ${m.model} · $${m.cost.toFixed(4)} this session`;
+    $("input").placeholder = `Message ${m.name}…`;
+  }
+}
+
+async function refreshTeam() {
+  try { const d = await api("/api/team"); team = d.members; $("total").textContent = "$" + d.total_cost.toFixed(4); renderTeam(); } catch {}
+}
+async function toggle(key, on) {
+  try { const d = await api("/api/toggle", { key, enabled: on }); team = d.members; renderTeam(); toast(d.message); } catch (e) { toast(e.message); }
+}
+async function bulk(on) { await toggle("all", on); }
+
+async function pick(key) { current = key; renderTeam(); await loadTranscript(); $("input").focus(); }
+async function loadTranscript() { renderMessages(await api("/api/transcript?member=" + current)); }
+function renderMessages(list) {
+  const box = $("messages");
+  if (!list.length && !sending) {
+    const name = (team.find(m => m.key === current) || {}).name || "";
+    box.innerHTML = `<div class="empty"><div class="big">Chat with your ${esc(name)}</div>
+      ${esc(ROLE[current] || "")}<div class="suggest">${(SUGGEST[current] || []).map(s =>
+      `<button onclick="quick(this.textContent)">${esc(s)}</button>`).join("")}</div></div>`;
+    return;
+  }
+  box.innerHTML = list.map(m => `<div class="msg ${m.role}">${m.role === "you" ? esc(m.text) : md(m.text)}</div>`).join("")
+    + (sending ? `<div class="thinking" id="thinking">Working on it…${liveLines.map(l => `<span class="live">· ${esc(l)}</span>`).join("")}</div>` : "");
+  box.scrollTop = box.scrollHeight;
+}
+function quick(t) { $("input").value = t; send(); }
+
+async function send(e) {
+  e && e.preventDefault();
+  const text = $("input").value.trim();
+  if (!text || sending) return;
+  const m = team.find(x => x.key === current);
+  if (m && !m.enabled) { toast(`${m.name} is switched off`); return; }
+  const member = current;
+  sending = true; liveLines = []; $("sendBtn").disabled = true; $("input").value = ""; autosize();
+  const list = await api("/api/transcript?member=" + member);
+  renderMessages([...list, { role: "you", text }]);
+  try { await api("/api/chat", { member, message: text }); }
+  catch (err) { toast(err.message); }
+  sending = false; $("sendBtn").disabled = false;
+  if (member === current) await loadTranscript();
+  refreshTeam(); refreshTasks();
+}
+async function resetChat() { await api("/api/reset", { member: current }); loadTranscript(); toast("Started a new conversation"); }
+
+async function pollActivity() {
+  try {
+    const evs = await api("/api/activity?since=" + lastEvent);
+    if (evs.length) {
+      lastEvent = evs[evs.length - 1].id;
+      const pane = $("activity");
+      pane.insertAdjacentHTML("afterbegin", evs.reverse().map(e =>
+        `<div class="ev"><span class="tm">${e.time}</span><br><b>${esc(e.agent)}</b> ${esc(e.text)}</div>`).join(""));
+      if (sending) { liveLines.push(...evs.reverse().filter(e => e.agent !== "You").map(e => `${e.agent} ${e.text}`));
+        liveLines = liveLines.slice(-5); const t = $("thinking");
+        if (t) t.innerHTML = "Working on it…" + liveLines.map(l => `<span class="live">· ${esc(l)}</span>`).join(""); }
+    }
+    if (!$("activity").innerHTML) $("activity").innerHTML = `<div class="ev" style="color:var(--muted)">Everything your team does shows up here.</div>`;
+  } catch {}
+}
+
+let shownApprovals = "";
+async function pollApprovals() {
+  try {
+    const list = await api("/api/approvals");
+    const sig = list.map(a => a.id).join(",");
+    if (sig === shownApprovals) return;
+    shownApprovals = sig;
+    $("approvals").innerHTML = list.map(a => `
+      <div class="approval"><div class="a"><div class="h">Approval needed</div>${esc(a.action)}</div>
+        <button onclick="answer(${a.id}, false)">Decline</button>
+        <button class="yes" onclick="answer(${a.id}, true)">Approve</button></div>`).join("");
+    if (list.length) document.title = "(!) Approval needed · Daniel Corp"; else document.title = "Daniel Corp · AI Team";
+  } catch {}
+}
+async function answer(id, approved) {
+  try { await api("/api/approve", { id, approved }); toast(approved ? "Approved" : "Declined"); } catch (e) { toast(e.message); }
+  shownApprovals = ""; pollApprovals();
+}
+
+async function refreshTasks() {
+  try {
+    const { tasks, projects } = await api("/api/tasks");
+    $("tasks").innerHTML =
+      `<div class="label">Projects</div>` + (projects.length ? projects.map(p => `<div class="task"><div class="tt">${esc(p.name)}</div>
+        ${p.deadline ? `<span class="pill">due ${esc(p.deadline)}</span>` : ""}<span class="pill">${esc(p.status || "")}</span></div>`).join("")
+        : `<div class="ev" style="color:var(--muted)">No projects yet.</div>`) +
+      `<div class="label" style="margin-top:16px">Tasks</div>` + (tasks.length ? tasks.map(t => `<div class="task"><div class="tt">#${t.id} ${esc(t.title)}</div>
+        <span class="pill ${esc(t.status)}">${esc(t.status)}</span><span class="pill">${esc(t.owner)}</span>
+        ${t.result ? `<div style="margin-top:6px;color:var(--muted)">${esc(t.result)}</div>` : ""}</div>`).join("")
+        : `<div class="ev" style="color:var(--muted)">No tasks yet.</div>`);
+  } catch {}
+}
+function tab(which) {
+  $("activity").hidden = which !== "act"; $("tasks").hidden = which !== "tasks";
+  $("tabAct").classList.toggle("on", which === "act"); $("tabTasks").classList.toggle("on", which === "tasks");
+  if (which === "tasks") refreshTasks();
+}
+
+function autosize() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
+$("input").addEventListener("input", autosize);
+$("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+
+(async () => { await refreshTeam(); await loadTranscript(); refreshTasks(); pollActivity(); })();
+setInterval(refreshTeam, 3000); setInterval(pollActivity, 1500); setInterval(pollApprovals, 1000);
+</script>
+</body>
+</html>

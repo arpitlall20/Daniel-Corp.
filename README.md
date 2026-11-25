@@ -40,6 +40,19 @@ python main.py
 
 ## Use it
 
+### Control panel (recommended)
+
+```bash
+python web.py          # opens http://localhost:8000 in your browser
+```
+On Windows you can just double-click **start.bat**.
+
+In the panel you can switch agents on/off, chat with anyone, approve or decline their actions,
+watch live activity and see the task board. It only runs on your computer. Press Ctrl+C in the
+terminal window to stop it.
+
+### Terminal
+
 ```bash
 python main.py                                   # chat with the Team Lead
 python main.py chat assistant                    # chat with your assistant (or travel, senior_dev, junior_dev)
